@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:22.04
 RUN apt update
 RUN apt install python3.10 python3-pip python3.10-dev -y
 RUN apt install curl -y

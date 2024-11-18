@@ -18,7 +18,7 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker
+      - name: Build and push image
         run: |
           sudo DOCKER_BUILDKIT=1 docker build --progress=plain -t drag817/service_center:latest .
           sudo docker push drag817/service_center:latest
