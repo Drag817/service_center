@@ -5,7 +5,6 @@ RUN apt install curl -y
 COPY . ./app
 WORKDIR ./app
 RUN pip install -r requirements.txt
-RUN rm docker-compose.yml
 RUN rm -rf dbdata
 RUN rm -rf .git .idea __pycache__
 EXPOSE 3000
