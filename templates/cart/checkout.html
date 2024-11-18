@@ -1,0 +1,213 @@
+
+<!-- templates/cart/checkout.html -->
+{% extends "base.html" %}
+{% block title %}Оформление заказа{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <h1>Оформление заказа</h1>
+    
+    <div class="checkout-content">
+        <div class="checkout-form">
+            <form method="POST" action="{{ url_for('cart.checkout') }}" id="checkout-form">
+                <div class="form-section">
+                    <h3>Контактная информация</h3>
+                    <div class="form-group">
+                        <label for="name">ФИО:</label>
+                        <input type="text" 
+                               id="name" 
+                               name="name" 
+                               value="{{ current_user.name if current_user.name }}"
+                               required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Телефон:</label>
+                        <input type="tel" 
+                               id="phone" 
+                               name="phone" 
+                               pattern="[0-9]{11}"
+                               placeholder="89991234567"
+                               required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" 
+                               id="email" 
+                               name="email" 
+                               value="{{ current_user.email }}"
+                               required>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Предпочтительное время</h3>
+                    <div class="form-group">
+                        <label for="preferred_date">Дата:</label>
+                        <input type="date" 
+                               id="preferred_date" 
+                               name="preferred_date"
+                               min="{{ today }}"
+                               required>
+                    </div>
+                    <div class="form-group">
+                        <label for="preferred_time">Время:</label>
+                        <select id="preferred_time" name="preferred_time" required>
+                            <option value="">Выберите время</option>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                            <option value="11:00">11:00</option>
+                            <option value="12:00">12:00</option>
+                            <option value="13:00">13:00</option>
+                            <option value="14:00">14:00</option>
+                            <option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option>
+                            <option value="17:00">17:00</option>
+                            <option value="18:00">18:00</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Способ оплаты</h3>
+                    <div class="payment-methods">
+                        <div class="payment-method">
+                            <input type="radio" 
+                                   id="payment_cash" 
+                                   name="payment_method" 
+                                   value="cash" 
+                                   checked>
+                            <label for="payment_cash">
+                                <i class="cash-icon"></i>
+                                Наличными
+                            </label>
+                        </div>
+                        <div class="payment-method">
+                            <input type="radio" 
+                                   id="payment_card" 
+                                   name="payment_method" 
+                                   value="card">
+                            <label for="payment_card">
+                                <i class="card-icon"></i>
+                                Картой при получении
+                            </label>
+                        </div>
+                        <div class="payment-method">
+                            <input type="radio" 
+                                   id="payment_online" 
+                                   name="payment_method" 
+                                   value="online">
+                            <label for="payment_online">
+                                <i class="online-icon"></i>
+                                Онлайн оплата
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Комментарий к заказу</h3>
+                    <div class="form-group">
+                        <textarea id="comment" 
+                                  name="comment" 
+                                  rows="4"
+                                  placeholder="Дополнительная информация по заказу"></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="order-summary">
+            <div class="summary-card">
+                <h3>Ваш заказ</h3>
+                <div class="order-items">
+                    {% for item in items %}
+                    <div class="order-item">
+                        <div class="item-info">
+                            <span class="item-name">{{ item.name }}</span>
+                            <span class="item-quantity">× {{ item.quantity }}</span>
+                        </div>
+                        <span class="item-total">{{ format_price(item.total) }} ₽</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="order-totals">
+                    <div class="total-line">
+                        <span>Количество услуг:</span>
+                        <span>{{ items|length }}</span>
+                    </div>
+                    <div class="total-line total-sum">
+                        <span>Итого к оплате:</span>
+                        <span>{{ format_price(total) }} ₽</span>
+                    </div>
+                </div>
+
+                <button type="submit" 
+                        form="checkout-form" 
+                        class="submit-order">
+                    Подтвердить заказ
+                </button>
+
+                <div class="terms-agreement">
+                    <p>Нажимая кнопку «Подтвердить заказ», вы соглашаетесь с условиями 
+                       <a href="#">пользовательского соглашения</a> и 
+                       <a href="#">политикой конфиденциальности</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Валидация формы
+    const form = document.getElementById('checkout-form');
+    const phone = document.getElementById('phone');
+    const preferredDate = document.getElementById('preferred_date');
+    
+    // Маска для телефона
+    phone.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) value = value.slice(0, 11);
+        e.target.value = value;
+    });
+
+    // Проверка даты
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setDate(today.getDate() + 14); // максимум 2 недели вперед
+    
+    preferredDate.addEventListener('input', function(e) {
+        const selected = new Date(e.target.value);
+        if (selected < today) {
+            e.target.value = today.toISOString().split('T')[0];
+        } else if (selected > maxDate) {
+            e.target.value = maxDate.toISOString().split('T')[0];
+        }
+    });
+
+    // Валидация формы перед отправкой
+    form.addEventListener('submit', function(e) {
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('error');
+            } else {
+                field.classList.remove('error');
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            alert('Пожалуйста, заполните все обязательные поля');
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

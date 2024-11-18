@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Профиль - {{ current_user.username }}{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>Профиль пользователя</h1>
+        <div class="user-info">
+            <h2>{{ current_user.username }}</h2>
+            <p>{{ current_user.email }}</p>
+            <p>Роль: {{ 'Администратор' if current_user.is_admin else 'Пользователь' }}</p>
+        </div>
+    </div>
+
+    <div class="orders-section">
+        <h3>История заказов</h3>
+        {% if orders %}
+            <div class="orders-list">
+                {% for order in orders %}
+                    <div class="order-card">
+                        <div class="order-header">
+                            <span class="order-number">Заказ #{{ order.id }}</span>
+                            <span class="order-date">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                        </div>
+                        <div class="order-content">
+                            <div class="order-services">
+                                {% if order.services %}
+                                    <p>Услуги: {{ order.services }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="order-details">
+                                <span class="order-total">Сумма: {{ format_price(order.total_amount) }} ₽</span>
+                                <span class="order-status status-{{ order.status }}">
+                                    {{ {'pending': 'Ожидает', 'confirmed': 'Подтвержден', 
+                                       'completed': 'Выполнен', 'cancelled': 'Отменен'}[order.status] }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-orders">У вас пока нет заказов</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.profile-header {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.user-info {
+    margin-top: 1.5rem;
+}
+
+.user-info h2 {
+    color: var(--primary-color);
+    margin: 0 0 0.5rem 0;
+}
+
+.user-info p {
+    margin: 0.5rem 0;
+    color: var(--text-color);
+}
+
+.orders-section {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.orders-section h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+}
+
+.order-card {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.order-number {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.order-date {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.order-content {
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.order-services {
+    margin-bottom: 1rem;
+}
+
+.order-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-total {
+    font-weight: bold;
+}
+
+.order-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-confirmed {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.status-completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.no-orders {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+}
+</style>
+{% endblock %}

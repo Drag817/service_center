@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Главная - Компьютерный сервис-центр{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1>Профессиональный ремонт компьютеров</h1>
+        <p>Быстро, качественно, с гарантией</p>
+        <a href="{{ url_for('services') }}" class="cta-button">Наши услуги</a>
+    </div>
+</div>
+
+<div class="popular-services">
+    <h2>Популярные услуги</h2>
+    <div class="services-grid">
+        {% for service in popular_services %}
+        <div class="service-card">
+            <img src="{{ url_for('static', filename='images/services/' + service.image_path) }}"
+                 alt="{{ service.name }}">
+            <div class="service-content">
+                <h3>{{ service.name }}</h3>
+                <p>{{ service.description }}</p>
+                <div class="service-price">{{ format_price(service.price) }} ₽</div>
+                <a href="{{ url_for('service_detail', service_id=service.id) }}"
+                   class="service-button">Подробнее</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="stats-section">
+    <div class="stat-card">
+        <h3>Выполнено заказов</h3>
+        <div class="stat-value">{{ completed_orders }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Довольных клиентов</h3>
+        <div class="stat-value">{{ total_clients }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Средняя оценка</h3>
+        <div class="stat-value">{{ avg_rating }}/5</div>
+    </div>
+</div>
+{% endblock %}

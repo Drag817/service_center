@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Каталог услуг{% endblock %}
+
+{% block content %}
+<div class="catalog-container">
+    <div class="catalog-header">
+        <h1>Каталог услуг</h1>
+        <div class="filters">
+            <input type="text" id="service-search" placeholder="Поиск услуг...">
+            <select id="sort-select">
+                <option value="name">По названию</option>
+                <option value="price-asc">По цене (возрастание)</option>
+                <option value="price-desc">По цене (убывание)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="services-grid" id="services-grid">
+        {% for service in services %}
+        <div class="service-card" data-id="{{ service.id }}">
+            <img src="{{ url_for('static', filename='images/services/' + service.image_path) }}" 
+                 alt="{{ service.name }}" class="service-image">
+            <div class="service-content">
+                <h3 class="service-title">{{ service.name }}</h3>
+                <p class="service-description">{{ service.description }}</p>
+                <div class="service-price">{{ format_price(service.price) }} ₽</div>
+                {% if current_user.is_authenticated %}
+                    <form action="{{ url_for('add_to_cart', service_id=service.id) }}" method="POST">
+                        <div class="quantity-control">
+                            <button type="button" class="quantity-btn minus">-</button>
+                            <input type="number" name="quantity" value="1" min="1" max="10" class="quantity-input">
+                            <button type="button" class="quantity-btn plus">+</button>
+                        </div>
+                        <button type="submit">В корзину</button>
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="login-to-order">Войдите, чтобы заказать</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% for p in range(1, total_pages + 1) %}
+            <a href="{{ url_for('services', page=p) }}" 
+               class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Управление количеством
+    document.querySelectorAll('.quantity-control').forEach(control => {
+        const input = control.querySelector('.quantity-input');
+        control.querySelector('.minus').onclick = () => 
+            input.value = Math.max(1, parseInt(input.value) - 1);
+        control.querySelector('.plus').onclick = () => 
+            input.value = Math.min(10, parseInt(input.value) + 1);
+    });
+
+    // Поиск и сортировка
+    const grid = document.getElementById('services-grid');
+    const cards = Array.from(grid.querySelectorAll('.service-card'));
+    const search = document.getElementById('service-search');
+    const sort = document.getElementById('sort-select');
+
+    search.oninput = e => {
+        const term = e.target.value.toLowerCase();
+        cards.forEach(card => {
+            const text = card.querySelector('.service-title').textContent.toLowerCase() + 
+                        card.querySelector('.service-description').textContent.toLowerCase();
+            card.style.display = text.includes(term) ? '' : 'none';
+        });
+    };
+
+    sort.onchange = e => {
+        cards.sort((a, b) => {
+            const getPrice = el => parseFloat(el.querySelector('.service-price').textContent);
+            const getName = el => el.querySelector('.service-title').textContent;
+            
+            switch(e.target.value) {
+                case 'name': return getName(a).localeCompare(getName(b));
+                case 'price-asc': return getPrice(a) - getPrice(b);
+                case 'price-desc': return getPrice(b) - getPrice(a);
+            }
+        }).forEach(card => grid.appendChild(card));
+    };
+});
+</script>
+{% endblock %}

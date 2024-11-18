@@ -1,0 +1,6 @@
+dbdata
+.env
+init_db.py
+conf.d
+docker-compose.yml
+.idea/
