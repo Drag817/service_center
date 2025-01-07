@@ -406,6 +406,12 @@ def init_db():
         with connection.cursor() as cur:
             # Создание таблиц
             cur.execute("""
+                CREATE DATABASE IF NOT EXISTS service_center
+                    CHARACTER SET utf8mb4
+                    COLLATE utf8mb4_unicode_ci;
+            """)
+
+            cur.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id INT PRIMARY KEY AUTO_INCREMENT,
                     username VARCHAR(50) UNIQUE NOT NULL,
@@ -474,7 +480,7 @@ def init_db():
 
 if __name__ == '__main__':
     # Инициализация базы данных
-    # init_db()
+    init_db()
     #
     # Создаем папку для загрузки изображений
     # os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
