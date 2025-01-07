@@ -23,7 +23,7 @@ connection = pymysql.connect(
             port=3306,
             user=os.getenv("MYSQL_USER"),
             password=os.getenv("MYSQL_PASS"),
-            database="service_center",
+            # database="service_center",
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
@@ -405,11 +405,11 @@ def init_db():
         # with connection:
         with connection.cursor() as cur:
             # Создание таблиц
-            cur.execute("""
-                CREATE DATABASE IF NOT EXISTS service_center
-                    CHARACTER SET utf8mb4
-                    COLLATE utf8mb4_unicode_ci;
-            """)
+            # cur.execute("""
+            #     CREATE DATABASE IF NOT EXISTS service_center
+            #         CHARACTER SET utf8mb4
+            #         COLLATE utf8mb4_unicode_ci;
+            # """)
 
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS users (
