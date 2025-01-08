@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог услуг | Сервисный центр</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .service-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .service-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .review-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .reviews-list {
+            margin-top: 1rem;
+        }
+
+        .review {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .sort-controls {
+            margin: 2rem 0;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .sort-controls select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-left: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Каталог услуг сервисного центра</h1>
+    </header>
+
+    <nav class="nav">
+        <a href="{{ url_for('index') }}">Главная</a>
+        <a href="{{ url_for('catalog') }}" class="active">Каталог</a>
+        {% if 'user_id' in session %}
+            {% if session['role'] == 'admin' %}
+                <a href="{{ url_for('admin_panel') }}">Админ панель</a>
+            {% endif %}
+            <a href="{{ url_for('profile') }}">Личный кабинет</a>
+            <a href="{{ url_for('logout') }}">Выйти</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Войти</a>
+            <a href="{{ url_for('register') }}">Регистрация</a>
+        {% endif %}
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Панель сортировки -->
+        <div class="sort-controls">
+            <span>Сортировать по:</span>
+            <select id="sort-select" onchange="updateSort()">
+                <option value="popularity" {% if sort_by == 'popularity' %}selected{% endif %}>Популярности</option>
+                <option value="price_asc" {% if sort_by == 'price' and order == 'asc' %}selected{% endif %}>Цене (по возрастанию)</option>
+                <option value="price_desc" {% if sort_by == 'price' and order == 'desc' %}selected{% endif %}>Цене (по убыванию)</option>
+            </select>
+        </div>
+
+        <!-- Сетка услуг -->
+        <div class="catalog-grid">
+            {% for product in products %}
+            <div class="service-card">
+                <img src="/{{ product.image }}" alt="{{ product.name }}" class="service-image">
+                <div class="service-info">
+                    <h3>{{ product.name }}</h3>
+                    <p class="price">{{ product.price }} ₽</p>
+                    <p class="description">{{ product.description }}</p>
+                    
+                    {% if 'user_id' in session %}
+                    <div class="service-actions">
+                        <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST" class="cart-form">
+                            <button type="submit" class="btn btn-primary">Добавить в корзину</button>
+                        </form>
+                        <button onclick="showReviewForm('{{ product.id }}')" class="btn btn-secondary">
+                            Оставить отзыв
+                        </button>
+                    </div>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-primary">Войти для заказа</a>
+                    {% endif %}
+
+                    <div class="review-section">
+                        <h4>Отзывы о услуге:</h4>
+                        <div class="reviews-list">
+                            {% for review in product.reviews %}
+                            <div class="review">
+                                <div class="review-header">
+                                    <span class="username">{{ review.username }}</span>
+                                    <span class="date">{{ review.created_at.strftime('%d.%m.%Y') }}</span>
+                                </div>
+                                <div class="rating">
+                                    {% for i in range(review.rating) %}⭐{% endfor %}
+                                </div>
+                                <p class="review-text">{{ review.comment }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Модальное окно для отзыва -->
+    <div id="review-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeReviewModal()">&times;</span>
+            <h2>Оставить отзыв</h2>
+            <form id="review-form" method="POST">
+                <div class="form-group">
+                    <label for="rating">Оценка:</label>
+                    <select name="rating" id="rating" required>
+                        <option value="5">5 звезд</option>
+                        <option value="4">4 звезды</option>
+                        <option value="3">3 звезды</option>
+                        <option value="2">2 звезды</option>
+                        <option value="1">1 звезда</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Комментарий:</label>
+                    <textarea name="comment" id="comment" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function updateSort() {
+            const select = document.getElementById('sort-select');
+            const [sort, order] = select.value.split('_');
+            window.location.href = `{{ url_for('catalog') }}?sort=${sort}&order=${order || 'desc'}`;
+        }
+
+        function showReviewForm(productId) {
+            const modal = document.getElementById('review-modal');
+            const form = document.getElementById('review-form');
+            form.action = `/review/add/${productId}`;
+            modal.style.display = 'block';
+        }
+
+        function closeReviewModal() {
+            document.getElementById('review-modal').style.display = 'none';
+        }
+
+        // Закрытие модального окна при клике вне его
+        window.onclick = function(event) {
+            const modal = document.getElementById('review-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Подтверждение добавления в корзину
+        document.querySelectorAll('.cart-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if(confirm('Добавить услугу в корзину?')) {
+                    this.submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | Сервисный центр</title>
+    <style>
+        /* Стили для оформления страницы */
+        :root {
+            --primary-red: #007bff;
+            --primary-blue: #007bff;
+            --white: #ffffff;
+            --gray-light: #f8f9fa;
+            --gray-dark: #343a40;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--gray-light);
+        }
+
+        .header {
+            background-color: var(--primary-red);
+            color: var(--white);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .nav {
+            background-color: var(--primary-blue);
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .nav a {
+            color: var(--white);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .nav a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--gray-dark);
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--primary-blue);
+            color: var(--white);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .auth-links {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .auth-links a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+
+        .roles-info {
+            margin-top: 2rem;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+
+        .roles-info h3 {
+            color: var(--primary-red);
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Сервисный центр</h1>
+    </header>
+
+    <nav class="nav">
+        <a href="{{ url_for('index') }}">Главная</a>
+        <a href="{{ url_for('catalog') }}">Каталог услуг</a>
+        <a href="{{ url_for('login') }}" class="active">Войти</a>
+        <a href="{{ url_for('register') }}">Регистрация</a>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2>Вход в систему</h2>
+
+        <form method="POST" class="login-form">
+            <div class="form-group">
+                <label for="username">Имя пользователя:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <button type="submit" class="btn">Войти</button>
+        </form>
+
+        <div class="auth-links">
+            <p>Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
+            <p><a href="{{ url_for('index') }}">Вернуться на главную</a></p>
+        </div>
+
+        <div class="roles-info">
+            <h3>Доступные роли в системе:</h3>
+            <div class="role-description">
+                <h4>Пользователь:</h4>
+                <ul>
+                    <li>Просмотр каталога услуг</li>
+                    <li>Добавление услуг в корзину</li>
+                    <li>Оставление отзывов</li>
+                    <li>Доступ к личному кабинету</li>
+                </ul>
+
+                <h4>Администратор:</h4>
+                <ul>
+                    <li>Управление каталогом услуг</li>
+                    <li>Управление пользователями</li>
+                    <li>Модерация отзывов</li>
+                    <li>Доступ к статистике</li>
+                </ul>
+            </div>
+
+            <div class="info-block">
+                <p><strong>Внимание!</strong> После входа вы будете перенаправлены:</p>
+                <ul>
+                    <li>Пользователи - в личный кабинет</li>
+                    <li>Администраторы - в панель управления</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Валидация формы
+        document.querySelector('.login-form').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (username.length < 3) {
+                e.preventDefault();
+                alert('Имя пользователя должно содержать минимум 3 символа!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('Пароль должен содержать минимум 6 символов!');
+                return;
+            }
+        });
+
+        // Добавляем подсказки при наведении на поля
+        const usernameInput = document.getElementById('username');
+        usernameInput.title = 'Введите имя пользователя (минимум 3 символа)';
+        
+        const passwordInput = document.getElementById('password');
+        passwordInput.title = 'Введите пароль (минимум 6 символов)';
+
+        // Подсветка активного поля
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = '#007bff';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.style.borderColor = '#ddd';
+            });
+        });
+    </script>
+
+    <!-- Дополнительные стили -->
+    <style>
+        .role-description {
+            margin-top: 1rem;
+        }
+
+        .role-description h4 {
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .role-description ul {
+            margin: 0 0 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .role-description li {
+            margin-bottom: 0.3rem;
+        }
+
+        .info-block {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 4px;
+        }
+
+        .info-block p {
+            margin: 0 0 0.5rem 0;
+        }
+
+        .info-block ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+
+            .nav {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</body>
+</html>

@@ -1,484 +1,635 @@
-from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify
-from flask_login import LoginManager, current_user, login_required, login_user, logout_user
-import pymysql
-from datetime import datetime, timedelta
-import secrets
+# Файл: service_center_project/app.py
 import os
-from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+
 from functools import wraps
 
-# Инициализация Flask приложения
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
+
+
+# Создание приложения Flask
 app = Flask(__name__)
+app.secret_key = '7g8m5SDDy9Nz4PlUbnzQ2WkD4QypIW'  # Замените на свой секретный ключ
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{app.secret_key}@195.2.78.99:3306/service_center'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
+app.config['CONNECTION_TIMEOUT'] = 86400
 
-# Конфигурация приложения
-app.config.update(
-    SECRET_KEY=secrets.token_hex(16),
-    UPLOAD_FOLDER=os.path.join('static', 'images', 'services'),
-    MAX_CONTENT_LENGTH=16 * 1024 * 1024,
-    PERMANENT_SESSION_LIFETIME=timedelta(days=7)
-)
+# Создаем папку для загрузок, если её нет
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-connection = pymysql.connect(
-            host="mysql_db",
-            port=3306,
-            user=os.getenv("MYSQL_USER"),
-            password=os.getenv("MYSQL_PASSWORD"),
-            database=os.getenv("MYSQL_DATABASE"),
-            charset='utf8mb4',
-            cursorclass=pymysql.cursors.DictCursor
-        )
-
-# Инициализация Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = 'Пожалуйста, войдите для доступа к этой странице.'
-login_manager.login_message_category = 'warning'
+db = SQLAlchemy(app)
 
 
-class User:
-    def __init__(self, id, username, email, role):
-        self.id = id
-        self.username = username
-        self.email = email
-        self.role = role
-        self.is_active = True
-        self.is_authenticated = True
-        self.is_anonymous = False
-
-    def get_id(self):
-        return str(self.id)
-
-    @property
-    def is_admin(self):
-        return self.role == 'admin'
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    # with connection:
-    with connection.cursor() as cur:
-        cur.execute("SELECT id, username, email, role FROM users WHERE id = %s", (user_id,))
-        user_data = cur.fetchone()
-
-    if user_data:
-        return User(
-            user_data['id'],
-            user_data['username'],
-            user_data['email'],
-            user_data['role']
-        )
-    else:
-        return None
-
-
-def admin_required(f):
+# Декораторы для проверки прав доступа
+def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            flash('Пожалуйста, войдите в систему', 'error')
-
+        if 'user_id' not in session:
+            flash('Необходимо войти в систему.', 'error')
             return redirect(url_for('login'))
-
-        if not current_user.is_admin:
-            flash('Доступ запрещен. Необходимы права администратора.', 'error')
-
-            return redirect(url_for('index'))
-
         return f(*args, **kwargs)
 
     return decorated_function
 
 
-def get_cart_data():
-    cart = session.get('cart', {})
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Необходимо войти в систему.', 'error')
+            return redirect(url_for('login'))
+        if session.get('role') != 'admin':
+            flash('Доступ запрещен. Необходимы права администратора.', 'error')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
 
-    if not cart:
-        return [], 0
-
-    # cur = connection.cursor()
-    total = 0
-    items = []
-
-    # with connection:
-    with connection.cursor() as cur:
-        for service_id, quantity in cart.items():
-            cur.execute("""
-                SELECT id, name, price, image_path 
-                FROM services 
-                WHERE id = %s
-            """, (service_id,))
-            service = cur.fetchone()
-
-            if service:
-                item_total = float(service['price']) * quantity
-                items.append({
-                    'id': service['id'],
-                    'name': service['name'],
-                    'price': float(service['price']),
-                    'image_path': service['image_path'],
-                    'quantity': quantity,
-                    'total': item_total
-                })
-                total += item_total
-
-    return items, total
+    return decorated_function
 
 
-# Маршруты
+# Проверка расширения файла
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+
+# Маршрут для отображения загруженных файлов
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+# Модели базы данных
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    role = db.Column(db.String(10), nullable=False, default='user')
+    email = db.Column(db.String(120), unique=True)
+    phone = db.Column(db.String(20))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    description = db.Column(db.Text)
+    image = db.Column(db.String(200))
+    popularity = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # Добавляем relationship для получения отзывов
+    reviews = db.relationship('Review', backref='product', lazy=True, cascade='all, delete-orphan')
+
+
+class Cart(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id', ondelete='CASCADE'))
+    quantity = db.Column(db.Integer, default=1)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # Добавляем relationship для получения информации о продукте
+    product = db.relationship('Product', backref='cart_items')
+
+
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id', ondelete='CASCADE'))
+    comment = db.Column(db.Text, nullable=False)
+    rating = db.Column(db.Integer, default=5)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # Добавляем relationship для получения информации о пользователе
+    user = db.relationship('User', backref='reviews')
+
+
+# Основные маршруты
 @app.route('/')
 def index():
     try:
-        # Популярные услуги
-        # with connection:
-        with connection.cursor() as cur:
-            cur.execute("""
-                SELECT s.*, COUNT(oi.id) as orders_count
-                FROM services s
-                LEFT JOIN order_items oi ON s.id = oi.service_id
-                GROUP BY s.id
-                ORDER BY orders_count DESC, s.created_at DESC
-                LIMIT 6
-            """)
-            popular_services = cur.fetchall()
-
-            # Статистика
-            cur.execute("SELECT COUNT(*) as count FROM orders WHERE status = 'completed'")
-            completed_orders = cur.fetchone()['count']
-
-            cur.execute("SELECT COUNT(*) as count FROM users WHERE role = 'user'")
-            total_clients = cur.fetchone()['count']
-
-        return render_template(
-            'index.html',
-            popular_services=popular_services,
-            completed_orders=completed_orders,
-            total_clients=total_clients,
-            avg_rating=4.5
-        )
-
+        products = Product.query.order_by(Product.popularity.desc()).limit(6).all()
+        # Получаем последние отзывы для главной страницы
+        recent_reviews = Review.query.order_by(Review.created_at.desc()).limit(3).all()
+        return render_template('index.html',
+                               products=products,
+                               recent_reviews=recent_reviews,
+                               username=session.get('username'),
+                               role=session.get('role'))
     except Exception as e:
-        print(f"Error in index: {e}")
-        flash('Произошла ошибка при загрузке данных', 'error')
-
-        return render_template(
-            'index.html',
-            popular_services=[],
-            completed_orders=0,
-            total_clients=0,
-            avg_rating=0
-        )
-    # finally:
-    #     cur.close()
-
-
-@app.route('/services')
-def services():
-    page = request.args.get('page', 1, type=int)
-    per_page = 9
-
-    # with connection:
-    with connection.cursor() as cur:
-        # Получаем общее количество услуг
-        cur.execute("SELECT COUNT(*) as count FROM services")
-        total_services = cur.fetchone()['count']
-
-        # Получаем услуги для текущей страницы
-        offset = (page - 1) * per_page
-
-    # connection.ping()
-    with connection.cursor() as cur:
-        cur.execute("""
-            SELECT id, name, description, price, image_path
-            FROM services
-            LIMIT %s OFFSET %s
-        """, (per_page, offset))
-
-        services = cur.fetchall()
-
-    return render_template('catalog/services.html',
-        services=services,
-        page=page,
-        total_pages=(total_services + per_page - 1) // per_page)
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        # with connection:
-        with connection.cursor() as cur:
-            cur.execute("SELECT * FROM users WHERE username = %s", (username,))
-            user = cur.fetchone()
-
-        if user and check_password_hash(user['password_hash'], password):
-            user_obj = User(
-                id=user['id'],
-                username=user['username'],
-                email=user['email'],
-                role=user['role']
-            )
-            login_user(user_obj)
-            flash('Вы успешно вошли в систему!', 'success')
-            next_page = request.args.get('next')
-            return redirect(next_page if next_page else url_for('index'))
-
-        flash('Неверное имя пользователя или пароль', 'error')
-
-    return render_template('auth/login.html')
+        print(f"Error: {e}")
+        return render_template('index.html',
+                               products=[],
+                               recent_reviews=[],
+                               username=session.get('username'),
+                               role=session.get('role'))
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
-        if not all([username, email, password]):
-            flash('Все поля должны быть заполнены', 'error')
-            return render_template('auth/register.html')
-
         try:
-            # with connection:
-            with connection.cursor() as cur:
-                # Проверяем существование пользователя
-                cur.execute("SELECT id FROM users WHERE username = %s OR email = %s",
-                           (username, email))
-                if cur.fetchone():
-                    flash('Пользователь с таким именем или email уже существует', 'error')
-                    return render_template('auth/register.html')
+            username = request.form.get('username')
+            password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+            role = request.form.get('role', 'user')
 
-                # Создаем пользователя
-                password_hash = generate_password_hash(password)
-                cur.execute("""
-                    INSERT INTO users (username, email, password_hash, role)
-                    VALUES (%s, %s, %s, 'user')
-                """, (username, email, password_hash))
-                connection.commit()
+            if password != confirm_password:
+                flash('Пароли не совпадают!', 'error')
+                return redirect(url_for('register'))
 
-                flash('Регистрация успешна! Теперь вы можете войти', 'success')
+            if User.query.filter_by(username=username).first():
+                flash('Пользователь с таким именем уже существует!', 'error')
+                return redirect(url_for('register'))
 
+            new_user = User(
+                username=username,
+                password=generate_password_hash(password),
+                role=role
+            )
+
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Регистрация успешно завершена!', 'success')
             return redirect(url_for('login'))
 
         except Exception as e:
-            connection.rollback()
-            print(f"Registration error: {e}")
-            flash('Произошла ошибка при регистрации', 'error')
+            db.session.rollback()
+            print(f"Error during registration: {str(e)}")
+            flash('Произошла ошибка при регистрации.', 'error')
+            return redirect(url_for('register'))
 
-    return render_template('auth/register.html')
+    return render_template('register.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
+
+            if not username or not password:
+                flash('Пожалуйста, заполните все поля!', 'error')
+                return redirect(url_for('login'))
+
+            user = User.query.filter_by(username=username).first()
+
+            if user and check_password_hash(user.password, password):
+                session['user_id'] = user.id
+                session['role'] = user.role
+                session['username'] = user.username
+
+                flash(f'Добро пожаловать, {user.username}!', 'success')
+
+                # Направляем пользователя в зависимости от роли
+                if user.role == 'admin':
+                    return redirect(url_for('admin_panel'))
+                else:
+                    return redirect(url_for('catalog'))
+            else:
+                flash('Неверное имя пользователя или пароль!', 'error')
+
+        except Exception as e:
+            print(f"Error during login: {str(e)}")
+            flash('Произошла ошибка при входе.', 'error')
+
+    return render_template('login.html')
 
 
 @app.route('/logout')
-@login_required
 def logout():
-    logout_user()
-    flash('Вы успешно вышли из системы', 'success')
+    session.clear()
+    flash('Вы успешно вышли из системы.', 'info')
     return redirect(url_for('index'))
 
 
-@app.route('/cart')
+@app.route('/catalog')
+def catalog():
+    try:
+        sort_by = request.args.get('sort', 'popularity')
+        order = request.args.get('order', 'desc')
+
+        query = Product.query
+        if sort_by == 'price':
+            if order == 'asc':
+                query = query.order_by(Product.price.asc())
+            else:
+                query = query.order_by(Product.price.desc())
+        else:
+            query = query.order_by(Product.popularity.desc())
+
+        products = query.all()
+
+        return render_template('catalog.html',
+                               products=products,
+                               sort_by=sort_by,
+                               order=order,
+                               username=session.get('username'),
+                               role=session.get('role'))
+    except Exception as e:
+        print(f"Error: {e}")
+        flash('Ошибка при загрузке каталога.', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/profile')
 @login_required
-def cart():
-    items, total = get_cart_data()
+def profile():
+    try:
+        user = User.query.get_or_404(session['user_id'])
+        cart_items = Cart.query.filter_by(user_id=session['user_id']).all()
+        reviews = Review.query.filter_by(user_id=session['user_id']).all()
 
-    return render_template(
-        'cart/cart.html',
-        items=items,
-        total=total
-    )
+        # Вычисляем общую стоимость корзины
+        total_price = sum(item.product.price * item.quantity for item in cart_items)
+
+        return render_template('profile.html',
+                               user=user,
+                               cart_items=cart_items,
+                               reviews=reviews,
+                               total_price=total_price,
+                               username=session.get('username'),
+                               role=session.get('role'))
+    except Exception as e:
+        flash(f'Ошибка при загрузке профиля: {str(e)}', 'error')
+        return redirect(url_for('index'))
 
 
-@app.route('/cart/add/<int:service_id>', methods=['POST'])
+@app.route('/profile/edit', methods=['GET', 'POST'])
 @login_required
-def add_to_cart(service_id):
-    quantity = int(request.form.get('quantity', 1))
-    cart = session.get('cart', {})
+def edit_profile():
+    try:
+        user = User.query.get_or_404(session['user_id'])
 
-    # with connection:
-    with connection.cursor() as cur:
-        cur.execute("SELECT id FROM services WHERE id = %s", (service_id,))
-        if not cur.fetchone():
-            flash('Услуга не найдена', 'error')
-            return redirect(url_for('services'))
+        if request.method == 'POST':
+            # Обновляем email
+            new_email = request.form.get('email')
+            if new_email and new_email != user.email:
+                if User.query.filter_by(email=new_email).first():
+                    flash('Этот email уже используется.', 'error')
+                    return redirect(url_for('edit_profile'))
+                user.email = new_email
 
-        cart[str(service_id)] = cart.get(str(service_id), 0) + quantity
-        session['cart'] = cart
-        flash('Услуга добавлена в корзину', 'success')
+            # Обновляем телефон
+            user.phone = request.form.get('phone')
 
-    return redirect(url_for('services'))
+            # Обновляем пароль, если он был предоставлен
+            new_password = request.form.get('new_password')
+            if new_password:
+                user.password = generate_password_hash(new_password)
+
+            db.session.commit()
+            flash('Профиль успешно обновлен!', 'success')
+            return redirect(url_for('profile'))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при обновлении профиля: {str(e)}', 'error')
+
+    return render_template('edit_profile.html',
+                           user=user,
+                           username=session.get('username'),
+                           role=session.get('role'))
 
 
-@app.route('/cart/remove/<int:service_id>', methods=['POST'])
+@app.route('/cart/add/<int:product_id>', methods=['POST'])
 @login_required
-def remove_from_cart(service_id):
-    cart = session.get('cart', {})
-    if str(service_id) in cart:
-        del cart[str(service_id)]
-        session['cart'] = cart
-        flash('Услуга удалена из корзины', 'success')
+def add_to_cart(product_id):
+    try:
+        product = Product.query.get_or_404(product_id)
+        existing_item = Cart.query.filter_by(
+            user_id=session['user_id'],
+            product_id=product_id
+        ).first()
 
-    return redirect(url_for('cart'))
+        if existing_item:
+            existing_item.quantity += 1
+        else:
+            cart_item = Cart(user_id=session['user_id'], product_id=product_id)
+            db.session.add(cart_item)
+
+        # Увеличиваем популярность товара
+        product.popularity += 1
+
+        db.session.commit()
+        flash('Услуга добавлена в корзину!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении в корзину: {str(e)}', 'error')
+
+    return redirect(url_for('catalog'))
 
 
+@app.route('/cart/remove/<int:cart_id>', methods=['POST'])
+@login_required
+def remove_from_cart(cart_id):
+    try:
+        cart_item = Cart.query.get_or_404(cart_id)
+        if cart_item.user_id != session['user_id']:
+            flash('У вас нет прав для выполнения этого действия.', 'error')
+            return redirect(url_for('profile'))
+
+        db.session.delete(cart_item)
+        db.session.commit()
+        flash('Услуга удалена из корзины.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при удалении из корзины: {str(e)}', 'error')
+
+    return redirect(url_for('profile'))
+
+
+@app.route('/review/add/<int:product_id>', methods=['POST'])
+@login_required
+def add_review(product_id):
+    try:
+        # Проверяем, существует ли уже отзыв от этого пользователя
+        existing_review = Review.query.filter_by(
+            user_id=session['user_id'],
+            product_id=product_id
+        ).first()
+
+        if existing_review:
+            flash('Вы уже оставили отзыв для этой услуги.', 'error')
+            return redirect(url_for('catalog'))
+
+        rating = request.form.get('rating', type=int)
+        comment = request.form.get('comment')
+
+        if not rating or not 1 <= rating <= 5:
+            flash('Пожалуйста, укажите корректную оценку.', 'error')
+            return redirect(url_for('catalog'))
+
+        review = Review(
+            user_id=session['user_id'],
+            product_id=product_id,
+            rating=rating,
+            comment=comment
+        )
+
+        # Увеличиваем популярность товара при добавлении отзыва
+        product = Product.query.get(product_id)
+        if product:
+            product.popularity += 2
+
+        db.session.add(review)
+        db.session.commit()
+        flash('Спасибо за ваш отзыв!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении отзыва: {str(e)}', 'error')
+
+    return redirect(url_for('catalog'))
+
+
+@app.route('/review/delete/<int:review_id>', methods=['POST'])
+@login_required
+def delete_review(review_id):
+    try:
+        review = Review.query.get_or_404(review_id)
+        # Проверяем, что отзыв принадлежит текущему пользователю
+        if review.user_id != session['user_id'] and session['role'] != 'admin':
+            flash('У вас нет прав для удаления этого отзыва.', 'error')
+            return redirect(url_for('profile'))
+
+        # Уменьшаем популярность товара при удалении отзыва
+        product = Product.query.get(review.product_id)
+        if product:
+            product.popularity = max(0, product.popularity - 2)
+
+        db.session.delete(review)
+        db.session.commit()
+        flash('Отзыв успешно удален.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при удалении отзыва: {str(e)}', 'error')
+
+    return redirect(request.referrer or url_for('profile'))
+
+
+# Административные маршруты
 @app.route('/admin')
-@login_required
 @admin_required
-def admin_dashboard():
-    # with connection:
-    with connection.cursor() as cur:
-        # Статистика
-        cur.execute("SELECT COUNT(*) as count FROM users WHERE role = 'user'")
-        users_count = cur.fetchone()['count']
-
-        cur.execute("SELECT COUNT(*) as count FROM orders WHERE status = 'pending'")
-        pending_orders = cur.fetchone()['count']
-
-        cur.execute("""
-            SELECT SUM(total_amount) as revenue
-            FROM orders
-            WHERE status = 'completed'
-            AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        """)
-        monthly_revenue = cur.fetchone()['revenue'] or 0
-
-        # Последние заказы
-        cur.execute("""
-            SELECT o.*, u.username
-            FROM orders o
-            JOIN users u ON o.user_id = u.id
-            ORDER BY o.created_at DESC
-            LIMIT 5
-        """)
-        recent_orders = cur.fetchall()
-
-    return render_template(
-        'admin/dashboard.html',
-        users_count=users_count,
-        pending_orders=pending_orders,
-        monthly_revenue=monthly_revenue,
-        recent_orders=recent_orders
-    )
+def admin_panel():
+    try:
+        products = Product.query.all()
+        users = User.query.all()
+        reviews = Review.query.all()
+        return render_template('admin.html',
+                               products=products,
+                               users=users,
+                               reviews=reviews,
+                               username=session.get('username'),
+                               role=session.get('role'))
+    except Exception as e:
+        flash(f'Ошибка при загрузке панели администратора: {str(e)}', 'error')
+        return redirect(url_for('index'))
 
 
-@app.route('/admin/services')
-@login_required
+@app.route('/admin/product/add', methods=['GET', 'POST'])
 @admin_required
-def admin_services():
-    # with connection:
-    with connection.cursor() as cur:
-        cur.execute("SELECT * FROM services ORDER BY created_at DESC")
-        services = cur.fetchall()
+def admin_add_product():
+    if request.method == 'POST':
+        try:
+            name = request.form['name']
+            price = float(request.form['price'])
+            description = request.form['description']
+            file = request.files['image']
 
-    return render_template('admin/services.html', services=services)
+            if not name or not price or not description:
+                flash('Все поля должны быть заполнены!', 'error')
+                return redirect(url_for('admin_add_product'))
 
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
 
-# Контекстный процессор
-@app.context_processor
-def utility_processor():
-    def format_price(amount):
-        if amount is None:
-            return "0.00"
-        return "{:,.2f}".format(float(amount)).replace(',', ' ')
-
-    def get_cart_count():
-        return sum(session.get('cart', {}).values())
-
-    return dict(
-        format_price=format_price,
-        get_cart_count=get_cart_count,
-        now=datetime.now()
-    )
-
-
-def init_db():
-    with app.app_context():
-        # try:
-        # with connection:
-        with connection.cursor() as cur:
-            # Создание таблиц
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id INT PRIMARY KEY AUTO_INCREMENT,
-                    username VARCHAR(50) UNIQUE NOT NULL,
-                    email VARCHAR(100) UNIQUE NOT NULL,
-                    password_hash VARCHAR(255) NOT NULL,
-                    role ENUM('admin', 'user') DEFAULT 'user',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                new_product = Product(
+                    name=name,
+                    price=price,
+                    description=description,
+                    image=os.path.join('static/uploads', filename)
                 )
-            """)
 
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS services (
-                    id INT PRIMARY KEY AUTO_INCREMENT,
-                    name VARCHAR(100) NOT NULL,
-                    description TEXT,
-                    price DECIMAL(10, 2) NOT NULL,
-                    image_path VARCHAR(255),
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
+                db.session.add(new_product)
+                db.session.commit()
+                flash('Услуга успешно добавлена!', 'success')
+                return redirect(url_for('admin_panel'))
+            else:
+                flash('Пожалуйста, загрузите изображение в правильном формате.', 'error')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при добавлении услуги: {str(e)}', 'error')
 
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS orders (
-                    id INT PRIMARY KEY AUTO_INCREMENT,
-                    user_id INT,
-                    total_amount DECIMAL(10, 2) NOT NULL,
-                    status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (user_id) REFERENCES users(id)
-                )
-            """)
+    return render_template('admin_add_product.html',
+                           username=session.get('username'),
+                           role=session.get('role'))
 
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS order_items (
-                    id INT PRIMARY KEY AUTO_INCREMENT,
-                    order_id INT,
-                    service_id INT,
-                    quantity INT NOT NULL,
-                    price DECIMAL(10, 2) NOT NULL,
-                    FOREIGN KEY (order_id) REFERENCES orders(id),
-                    FOREIGN KEY (service_id) REFERENCES services(id)
-                )
-            """)
 
-            # Создание администратора по умолчанию
-            admin_password = generate_password_hash(os.getenv('PORTAL_ADMIN_PASSWORD'))
+@app.route('/admin/product/edit/<int:product_id>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_product(product_id):
+    try:
+        product = Product.query.get_or_404(product_id)
 
-            try:
-                cur.execute("""
-                    INSERT INTO users (username, email, password_hash, role)
-                    VALUES (%s, %s, %s, %s)
-                """, (os.getenv('PORTAL_ADMIN_LOGIN'), 'admin@example.com', admin_password, 'admin'))
-                connection.commit()
-                print("Admin user created successfully")
+        if request.method == 'POST':
+            product.name = request.form['name']
+            product.price = float(request.form['price'])
+            product.description = request.form['description']
 
-            except Exception as e:
-                print(f"Admin user already exists: {e}")
-                
-        # except Exception as e:
-        #     print(f"Database initialization error: {e}")
-        #     connection.rollback()
+            file = request.files.get('image')
+            if file and allowed_file(file.filename):
+                # Удаляем старое изображение
+                if product.image:
+                    old_image_path = os.path.join(app.root_path, product.image)
+                    if os.path.exists(old_image_path):
+                        os.remove(old_image_path)
 
-        # finally:
-        #     connection.close()
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                product.image = os.path.join('static/uploads', filename)
+
+            db.session.commit()
+            flash('Услуга успешно обновлена!', 'success')
+            return redirect(url_for('admin_panel'))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при обновлении услуги: {str(e)}', 'error')
+
+    return render_template('admin_edit_product.html',
+                           product=product,
+                           username=session.get('username'),
+                           role=session.get('role'))
+
+
+@app.route('/admin/product/delete/<int:product_id>', methods=['POST'])
+@admin_required
+def admin_delete_product(product_id):
+    try:
+        product = Product.query.get_or_404(product_id)
+
+        # Удаляем изображение
+        if product.image:
+            image_path = os.path.join(app.root_path, product.image)
+            if os.path.exists(image_path):
+                os.remove(image_path)
+
+        db.session.delete(product)
+        db.session.commit()
+        flash('Услуга успешно удалена.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при удалении услуги: {str(e)}', 'error')
+
+    return redirect(url_for('admin_panel'))
+
+
+@app.route('/admin/user/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_user():
+    if request.method == 'POST':
+        try:
+            username = request.form['username']
+            password = request.form['password']
+            email = request.form.get('email')
+            role = request.form['role']
+
+            if User.query.filter_by(username=username).first():
+                flash('Пользователь с таким именем уже существует!', 'error')
+                return redirect(url_for('admin_add_user'))
+
+            if email and User.query.filter_by(email=email).first():
+                flash('Пользователь с таким email уже существует!', 'error')
+                return redirect(url_for('admin_add_user'))
+
+            new_user = User(
+                username=username,
+                password=generate_password_hash(password),
+                email=email,
+                role=role
+            )
+
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Пользователь успешно добавлен!', 'success')
+            return redirect(url_for('admin_panel'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при добавлении пользователя: {str(e)}', 'error')
+
+    return render_template('admin_add_user.html',
+                           username=session.get('username'),
+                           role=session.get('role'))
+
+
+@app.route('/admin/user/edit/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_user(user_id):
+    try:
+        user = User.query.get_or_404(user_id)
+
+        if request.method == 'POST':
+            username = request.form['username']
+            email = request.form.get('email')
+            role = request.form['role']
+
+            if username != user.username and User.query.filter_by(username=username).first():
+                flash('Пользователь с таким именем уже существует!', 'error')
+                return redirect(url_for('admin_edit_user', user_id=user_id))
+
+            if email and email != user.email and User.query.filter_by(email=email).first():
+                flash('Пользователь с таким email уже существует!', 'error')
+                return redirect(url_for('admin_edit_user', user_id=user_id))
+
+            user.username = username
+            user.email = email
+            user.role = role
+
+            if request.form.get('password'):
+                user.password = generate_password_hash(request.form['password'])
+
+            db.session.commit()
+            flash('Пользователь успешно обновлен!', 'success')
+            return redirect(url_for('admin_panel'))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при обновлении пользователя: {str(e)}', 'error')
+
+    return render_template('admin_edit_user.html',
+                           user=user,
+                           username=session.get('username'),
+                           role=session.get('role'))
+
+
+@app.route('/admin/user/delete/<int:user_id>', methods=['POST'])
+@admin_required
+def admin_delete_user(user_id):
+    if user_id == session['user_id']:
+        flash('Невозможно удалить собственную учетную запись.', 'error')
+        return redirect(url_for('admin_panel'))
+
+    try:
+        user = User.query.get_or_404(user_id)
+        db.session.delete(user)
+        db.session.commit()
+        flash('Пользователь успешно удален.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при удалении пользователя: {str(e)}', 'error')
+
+    return redirect(url_for('admin_panel'))
 
 
 if __name__ == '__main__':
-    # Инициализация базы данных
-    init_db()
-    #
-    # Создаем папку для загрузки изображений
-    # os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    # print("Starting application...")
-    #
-    # Запускаем приложение
-    app.run(debug=True, host='0.0.0.0', port=3000)
+    with app.app_context():
+        db.create_all()
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
+
+    app.run(debug=True, port=3000)

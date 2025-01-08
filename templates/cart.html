@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Корзина</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <h1>Ваша корзина</h1>
+    {% for item in cart_items %}
+        <div>
+            <p>Продукт: {{ item.product_id }}</p>
+        </div>
+    {% endfor %}
+</body>
+</html>

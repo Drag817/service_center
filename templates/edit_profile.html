@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование профиля | Сервисный центр</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .edit-form-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--gray-dark);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .form-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Редактирование профиля</h1>
+    </header>
+
+    <nav class="nav">
+        <a href="{{ url_for('index') }}">Главная</a>
+        <a href="{{ url_for('catalog') }}">Каталог</a>
+        {% if session['role'] == 'admin' %}
+            <a href="{{ url_for('admin_panel') }}">Админ панель</a>
+        {% endif %}
+        <a href="{{ url_for('profile') }}" class="active">Личный кабинет</a>
+        <a href="{{ url_for('logout') }}">Выйти</a>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="edit-form-container">
+            <form method="POST" class="edit-profile-form">
+                <div class="form-group">
+                    <label for="username">Имя пользователя:</label>
+                    <input type="text" id="username" value="{{ user.username }}" disabled>
+                    <small class="form-text">Имя пользователя нельзя изменить</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" value="{{ user.email or '' }}" 
+                           placeholder="Введите email">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Телефон:</label>
+                    <input type="tel" id="phone" name="phone" value="{{ user.phone or '' }}" 
+                           placeholder="Например: 89001234567"
+                           pattern="[0-9]{11}">
+                    <small class="form-text">Формат: 11 цифр, например 89001234567</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="new_password">Новый пароль:</label>
+                    <input type="password" id="new_password" name="new_password"
+                           placeholder="Оставьте пустым, чтобы не менять">
+                    <small class="form-text">Минимум 6 символов</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Подтверждение пароля:</label>
+                    <input type="password" id="confirm_password" name="confirm_password"
+                           placeholder="Повторите новый пароль">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <a href="{{ url_for('profile') }}" class="btn btn-cancel">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Валидация формы
+        document.querySelector('.edit-profile-form').addEventListener('submit', function(e) {
+            const newPassword = document.getElementById('new_password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+
+            if (newPassword && newPassword.length < 6) {
+                e.preventDefault();
+                alert('Пароль должен содержать минимум 6 символов!');
+                return;
+            }
+
+            if (newPassword && newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('Пароли не совпадают!');
+                return;
+            }
+
+            const phone = document.getElementById('phone').value;
+            if (phone && !phone.match(/^[0-9]{11}$/)) {
+                e.preventDefault();
+                alert('Неверный формат номера телефона!');
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

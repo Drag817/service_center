@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет | Сервисный центр</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .profile-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .profile-sidebar {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .profile-main {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-info {
+            margin-bottom: 2rem;
+        }
+
+        .user-info h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .cart-items {
+            margin-top: 2rem;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .cart-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .user-reviews {
+            margin-top: 2rem;
+        }
+
+        .review-item {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .review-actions {
+            margin-top: 0.5rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-button {
+            padding: 0.5rem 1rem;
+            background: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--gray-dark);
+        }
+
+        .tab-button.active {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Личный кабинет</h1>
+    </header>
+
+    <nav class="nav">
+        <a href="{{ url_for('index') }}">Главная</a>
+        <a href="{{ url_for('catalog') }}">Каталог</a>
+        {% if session['role'] == 'admin' %}
+            <a href="{{ url_for('admin_panel') }}">Админ панель</a>
+        {% endif %}
+        <a href="{{ url_for('profile') }}" class="active">Личный кабинет</a>
+        <a href="{{ url_for('logout') }}">Выйти</a>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="profile-container">
+            <!-- Боковая панель -->
+            <div class="profile-sidebar">
+                <div class="user-info">
+                    <h3>{{ user.username }}</h3>
+                    <p>Email: {{ user.email or 'Не указан' }}</p>
+                    <p>Телефон: {{ user.phone or 'Не указан' }}</p>
+                    <p>Дата регистрации: {{ user.created_at.strftime('%d.%m.%Y') }}</p>
+                </div>
+                <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Редактировать профиль</a>
+            </div>
+
+            <!-- Основной контент -->
+            <div class="profile-main">
+                <div class="tab-buttons">
+                    <button class="tab-button active" onclick="switchTab('cart')">Корзина</button>
+                    <button class="tab-button" onclick="switchTab('reviews')">Мои отзывы</button>
+                </div>
+
+                <!-- Корзина -->
+                <div id="cart" class="tab-content active">
+                    <h2>Корзина</h2>
+                    {% if cart_items %}
+                        <div class="cart-items">
+                            {% for item in cart_items %}
+                            <div class="cart-item">
+                                <img src="/{{ item.product.image }}" alt="{{ item.product.name }}">
+                                <div class="cart-item-info">
+                                    <h3>{{ item.product.name }}</h3>
+                                    <p class="price">{{ item.product.price }} ₽</p>
+                                    <p>Количество: {{ item.quantity }}</p>
+                                </div>
+                                <form action="{{ url_for('remove_from_cart', cart_id=item.id) }}" method="POST" 
+                                      onsubmit="return confirm('Удалить услугу из корзины?');">
+                                    <button type="submit" class="btn btn-danger">Удалить</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                            <div class="cart-total">
+                                <h3>Итого: {{ total_price if total_price else 0 }} ₽</h3>
+                                <button class="btn btn-primary" onclick="alert('Функция оформления заказа в разработке')">
+                                    Оформить заказ
+                                </button>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p>Ваша корзина пуста. <a href="{{ url_for('catalog') }}">Перейти в каталог</a></p>
+                    {% endif %}
+                </div>
+
+                <!-- Отзывы -->
+                <div id="reviews" class="tab-content">
+                    <h2>Мои отзывы</h2>
+                    {% if reviews %}
+                        <div class="user-reviews">
+                            {% for review in reviews %}
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <div>
+                                        <h3>{{ review.product.name }}</h3>
+                                        <div class="rating">
+                                            {% for i in range(review.rating) %}⭐{% endfor %}
+                                        </div>
+                                    </div>
+                                    <span class="date">{{ review.created_at.strftime('%d.%m.%Y') }}</span>
+                                </div>
+                                <p>{{ review.comment }}</p>
+                                <div class="review-actions">
+                                    <form action="{{ url_for('delete_review', review_id=review.id) }}" method="POST"
+                                          onsubmit="return confirm('Удалить отзыв?');">
+                                        <button type="submit" class="btn btn-danger">Удалить отзыв</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>Вы еще не оставляли отзывов. <a href="{{ url_for('catalog') }}">Перейти к услугам</a></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            // Обновляем активную кнопку
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+
+            // Обновляем активный контент
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

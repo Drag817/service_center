@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | Сервисный центр</title>
+    <style>
+        /* Стили для оформления страницы */
+        :root {
+            --primary-red: #ff4d4d;
+            --primary-blue: #007bff;
+            --white: #ffffff;
+            --gray-light: #f8f9fa;
+            --gray-dark: #343a40;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--gray-light);
+        }
+
+        .header {
+            background-color: var(--primary-red);
+            color: var(--white);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .nav {
+            background-color: var(--primary-blue);
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .nav a {
+            color: var(--white);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .nav a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--gray-dark);
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--primary-blue);
+            color: var(--white);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .auth-links {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .auth-links a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+
+        .rules-container {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .rules-container h3 {
+            color: var(--primary-red);
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Сервисный центр</h1>
+    </header>
+
+    <nav class="nav">
+        <a href="{{ url_for('index') }}">Главная</a>
+        <a href="{{ url_for('catalog') }}">Каталог услуг</a>
+        <a href="{{ url_for('login') }}">Войти</a>
+        <a href="{{ url_for('register') }}" class="active">Регистрация</a>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2>Регистрация нового пользователя</h2>
+
+        <form method="POST" class="registration-form">
+            <div class="form-group">
+                <label for="username">Имя пользователя:</label>
+                <input type="text" id="username" name="username" required minlength="3" maxlength="80">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required minlength="6">
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Подтвердите пароль:</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="role">Роль:</label>
+                <select id="role" name="role" required>
+                    <option value="user">Пользователь</option>
+                    <option value="admin">Администратор</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn">Зарегистрироваться</button>
+        </form>
+
+        <div class="auth-links">
+            <p>Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+            <p><a href="{{ url_for('index') }}">Вернуться на главную</a></p>
+        </div>
+
+        <div class="rules-container">
+            <h3>Правила работы с сайтом:</h3>
+            <h4>Для пользователей:</h4>
+            <ul>
+                <li>Просмотр каталога услуг сервисного центра</li>
+                <li>Добавление услуг в корзину</li>
+                <li>Возможность оставлять отзывы об услугах</li>
+                <li>Управление личным кабинетом</li>
+                <li>Просмотр истории заказов</li>
+            </ul>
+
+            <h4>Для администраторов:</h4>
+            <ul>
+                <li>Полный доступ к управлению каталогом услуг</li>
+                <li>Управление пользователями системы</li>
+                <li>Модерация отзывов</li>
+                <li>Доступ к статистике и аналитике</li>
+                <li>Управление заказами</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Валидация формы
+        document.querySelector('.registration-form').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Пароли не совпадают!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('Пароль должен содержать минимум 6 символов!');
+                return;
+            }
+
+            const username = document.getElementById('username').value;
+            if (username.length < 3) {
+                e.preventDefault();
+                alert('Имя пользователя должно содержать минимум 3 символа!');
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,46 +1,126 @@
-{% extends "base.html" %}
-{% block title %}Главная - Компьютерный сервис-центр{% endblock %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная | Сервисный центр</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header class="header">
+        <h1>Сервисный центр</h1>
+        <p class="subtitle">Профессиональный ремонт и обслуживание техники</p>
+    </header>
 
-{% block content %}
-<div class="hero-section">
-    <div class="hero-content">
-        <h1>Профессиональный ремонт компьютеров</h1>
-        <p>Быстро, качественно, с гарантией</p>
-        <a href="{{ url_for('services') }}" class="cta-button">Наши услуги</a>
-    </div>
-</div>
+    <nav class="nav">
+        <a href="{{ url_for('index') }}" class="active">Главная</a>
+        <a href="{{ url_for('catalog') }}">Каталог услуг</a>
+        {% if 'user_id' in session %}
+            {% if session['role'] == 'admin' %}
+                <a href="{{ url_for('admin_panel') }}">Админ панель</a>
+            {% endif %}
+            <a href="{{ url_for('profile') }}">Личный кабинет</a>
+            <a href="{{ url_for('logout') }}">Выйти</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Войти</a>
+            <a href="{{ url_for('register') }}">Регистрация</a>
+        {% endif %}
+    </nav>
 
-<div class="popular-services">
-    <h2>Популярные услуги</h2>
-    <div class="services-grid">
-        {% for service in popular_services %}
-        <div class="service-card">
-            <img src="{{ url_for('static', filename='images/services/' + service.image_path) }}"
-                 alt="{{ service.name }}">
-            <div class="service-content">
-                <h3>{{ service.name }}</h3>
-                <p>{{ service.description }}</p>
-                <div class="service-price">{{ format_price(service.price) }} ₽</div>
-                <a href="{{ url_for('service_detail', service_id=service.id) }}"
-                   class="service-button">Подробнее</a>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Преимущества -->
+        <section class="features">
+            <h2>Наши преимущества</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛠️</div>
+                    <h3>Профессионализм</h3>
+                    <p>Команда опытных мастеров с многолетним стажем работы</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Скорость</h3>
+                    <p>Быстрая диагностика и ремонт в кратчайшие сроки</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Гарантия</h3>
+                    <p>Предоставляем гарантию на все виды работ</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏆</div>
+                    <h3>Качество</h3>
+                    <p>Используем только оригинальные запчасти</p>
+                </div>
             </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
+        </section>
 
-<div class="stats-section">
-    <div class="stat-card">
-        <h3>Выполнено заказов</h3>
-        <div class="stat-value">{{ completed_orders }}</div>
+        <!-- Популярные услуги -->
+        <section class="popular-services">
+            <h2>Популярные услуги</h2>
+            <div class="catalog-grid">
+                {% for product in products %}
+                <div class="service-card">
+                    <img src="/{{ product.image }}" alt="{{ product.name }}" class="service-image">
+                    <div class="service-info">
+                        <h3>{{ product.name }}</h3>
+                        <p class="price">{{ product.price }} ₽</p>
+                        <p class="description">{{ product.description }}</p>
+                        {% if 'user_id' in session %}
+                            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST">
+                                <button type="submit" class="btn btn-primary">В корзину</button>
+                            </form>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-primary">Войти для заказа</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="center-button" style="text-align: center; margin-top: 2rem;">
+                <a href="{{ url_for('catalog') }}" class="btn btn-primary">Посмотреть все услуги</a>
+            </div>
+        </section>
+
+        <!-- Контакты -->
+        <section class="contacts">
+            <h2>Контакты</h2>
+            <div class="contacts-grid">
+                <div class="contact-info">
+                    <h3>Адрес</h3>
+                    <p>г. Москва, ул. Примерная, д. 1</p>
+                </div>
+                <div class="contact-info">
+                    <h3>Телефон</h3>
+                    <p>8 (800) 123-45-67</p>
+                </div>
+                <div class="contact-info">
+                    <h3>Email</h3>
+                    <p>info@serviscentr.ru</p>
+                </div>
+                <div class="contact-info">
+                    <h3>Режим работы</h3>
+                    <p>Пн-Пт: 9:00 - 20:00</p>
+                    <p>Сб-Вс: 10:00 - 18:00</p>
+                </div>
+            </div>
+        </section>
     </div>
-    <div class="stat-card">
-        <h3>Довольных клиентов</h3>
-        <div class="stat-value">{{ total_clients }}</div>
-    </div>
-    <div class="stat-card">
-        <h3>Средняя оценка</h3>
-        <div class="stat-value">{{ avg_rating }}/5</div>
-    </div>
-</div>
-{% endblock %}
+
+    <footer class="footer" style="background-color: var(--gray-dark); color: var(--white); padding: 2rem 0; text-align: center; margin-top: 3rem;">
+        <div class="container">
+            <p>&copy; 2025 Сервисный центр. Все права защищены.</p>
+        </div>
+    </footer>
+</body>
+</html>

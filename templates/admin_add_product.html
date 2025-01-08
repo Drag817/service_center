@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавление новой услуги | Сервисный центр</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header class="header">
+        <h1>Добавление новой услуги</h1>
+    </header>
+
+    <nav class="nav">
+        <a href="{{ url_for('admin_panel') }}">Вернуться в панель управления</a>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data" class="service-form">
+                <div class="form-group">
+                    <label for="name">Название услуги:</label>
+                    <input type="text" id="name" name="name" required 
+                           placeholder="Введите название услуги">
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Стоимость (руб.):</label>
+                    <input type="number" id="price" name="price" step="0.01" required 
+                           placeholder="Введите стоимость">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Описание услуги:</label>
+                    <textarea id="description" name="description" rows="5" required 
+                              placeholder="Введите подробное описание услуги"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="image">Изображение:</label>
+                    <input type="file" id="image" name="image" accept="image/*" required>
+                    <small class="form-text">Поддерживаемые форматы: PNG, JPG, JPEG, GIF</small>
+                </div>
+
+                <div class="preview-container" style="display: none;">
+                    <h3>Предпросмотр изображения:</h3>
+                    <img id="preview" src="" alt="Предпросмотр" style="max-width: 300px;">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Добавить услугу</button>
+                    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Предпросмотр изображения
+        document.getElementById('image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('preview');
+            const previewContainer = document.querySelector('.preview-container');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+
+        // Валидация формы
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const price = document.getElementById('price').value;
+            if (price <= 0) {
+                e.preventDefault();
+                alert('Стоимость услуги должна быть больше нуля!');
+            }
+        });
+    </script>
+</body>
+</html>
