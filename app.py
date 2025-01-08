@@ -13,7 +13,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 # Создание приложения Flask
 app = Flask(__name__)
 app.secret_key = '7g8m5SDDy9Nz4PlUbnzQ2WkD4QypIW'  # Замените на свой секретный ключ
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{app.secret_key}@195.2.78.99:3306/service_center'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{app.secret_key}@mysql_db:3306/service_center'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
