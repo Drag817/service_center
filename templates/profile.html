@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Личный кабинет | Сервисный центр</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-red: #dc2626;
@@ -66,6 +67,7 @@
         .nav a:hover {
             background: var(--light-blue);
             color: var(--white);
+            transform: translateY(-2px);
         }
 
         .nav a.active {
@@ -75,8 +77,8 @@
 
         .container {
             max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
+            margin: 2rem auto;
+            padding: 1rem;
         }
 
         .profile-container {
@@ -88,10 +90,95 @@
 
         .profile-sidebar {
             background: var(--white);
-            padding: 1.5rem;
+            padding: 2rem;
             border-radius: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             height: fit-content;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .profile-sidebar .btn {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            background: var(--gray-light);
+            color: var(--gray-dark);
+        }
+
+        .profile-sidebar .btn:hover {
+            background: var(--primary-blue);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .profile-sidebar .btn i {
+            font-size: 0.9rem;
+        }
+
+        .profile-sidebar:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-avatar i {
+            font-size: 3rem;
+            color: var(--white);
+        }
+
+        .user-info {
+            margin-bottom: 2rem;
+        }
+
+        .user-info h3 {
+            color: var(--primary-blue);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-info p {
+            color: var(--gray-dark);
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .user-info i {
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+        }
+
+        .profile-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--gray-light);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: var(--gray-dark);
+        }
+
+        .stat-item i {
+            color: var(--primary-blue);
         }
 
         .profile-main {
@@ -101,22 +188,16 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .user-info h3 {
-            color: var(--primary-blue);
-            margin-bottom: 1rem;
-        }
-
         .btn {
-            padding: 0.75rem 1.5rem;
+            padding: 0.5rem 1rem;
             border: none;
             border-radius: 0.5rem;
-            font-weight: 600;
             cursor: pointer;
+            font-weight: 500;
             transition: var(--transition);
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            text-decoration: none;
         }
 
         .btn-primary {
@@ -124,17 +205,14 @@
             color: var(--white);
         }
 
-        .btn-primary:hover {
-            background: var(--dark-blue);
-        }
-
         .btn-danger {
             background: var(--primary-red);
             color: var(--white);
         }
 
-        .btn-danger:hover {
-            background: var(--light-red);
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .tab-buttons {
@@ -255,6 +333,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .profile-sidebar {
+                margin-bottom: 2rem;
+            }
+
             .cart-item {
                 flex-direction: column;
                 align-items: center;
@@ -301,13 +383,28 @@
         <div class="profile-container">
             <!-- Боковая панель -->
             <div class="profile-sidebar">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
                 <div class="user-info">
                     <h3>{{ user.username }}</h3>
-                    <p>Email: {{ user.email or 'Не указан' }}</p>
-                    <p>Телефон: {{ user.phone or 'Не указан' }}</p>
-                    <p>Дата регистрации: {{ user.created_at.strftime('%d.%m.%Y') }}</p>
+                    <p><i class="fas fa-envelope"></i> {{ user.email or 'Email не указан' }}</p>
+                    <p><i class="fas fa-phone"></i> {{ user.phone or 'Телефон не указан' }}</p>
+                    <p><i class="fas fa-calendar"></i> Регистрация: {{ user.created_at.strftime('%d.%m.%Y') }}</p>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Заказов: {{ cart_items|length }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-comment"></i>
+                            <span>Отзывов: {{ reviews|length }}</span>
+                        </div>
+                    </div>
                 </div>
-                <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Редактировать профиль</a>
+                <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Редактировать профиль
+                </a>
             </div>
 
             <!-- Основной контент -->
