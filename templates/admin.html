@@ -402,6 +402,39 @@
                 gap: 1rem;
             }
         }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge.admin {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .badge.user {
+            background: var(--gray-light);
+            color: var(--gray-dark);
+        }
     </style>
 </head>
 <body>
@@ -544,18 +577,15 @@
                             </td>
                             <td>{{ user.created_at.strftime('%d.%m.%Y') }}</td>
                             <td>
-                                <div class="card-actions">
-                                    <a href="{{ url_for('admin_edit_user', user_id=user.id) }}" 
-   class="btn btn-primary">
-    <i class="fas fa-edit"></i> Редактировать
-</a>
-<form action="{{ url_for('admin_delete_user', user_id=user.id) }}" 
-      method="POST" style="display: inline;">
-    <button type="submit" class="btn btn-danger" 
-            onclick="return confirmDelete('пользователя')">
-        <i class="fas fa-trash"></i> Удалить
-    </button>
-</form>
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('admin_edit_user', user_id=user.id) }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i> Редактировать
+                                    </a>
+                                    <form action="{{ url_for('admin_delete_user', user_id=user.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirmDelete('пользователя')">
+                                            <i class="fas fa-trash"></i> Удалить
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
