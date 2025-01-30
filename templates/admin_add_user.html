@@ -4,17 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Добавление пользователя | Сервисный центр</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <header class="header">
-        <h1>Добавление нового пользователя</h1>
+        <h1><i class="fas fa-user-plus"></i> Добавление пользователя</h1>
+        <p>Заполните данные нового пользователя</p>
     </header>
 
     <nav class="nav">
-        <a href="{{ url_for('admin_panel') }}">Назад к панели управления</a>
-        <a href="{{ url_for('index') }}">На главную</a>
-        <a href="{{ url_for('logout') }}">Выйти</a>
+        <a href="{{ url_for('admin_panel') }}">
+            <i class="fas fa-arrow-left"></i> Назад к панели управления
+        </a>
+        <a href="{{ url_for('index') }}">
+            <i class="fas fa-home"></i> На главную
+        </a>
+        <a href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i> Выйти
+        </a>
     </nav>
 
     <div class="container">
@@ -22,6 +31,7 @@
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }}">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -29,36 +39,112 @@
         {% endwith %}
 
         <div class="form-container">
+            <div class="form-header">
+                <h2><i class="fas fa-user-cog"></i> Данные пользователя</h2>
+            </div>
+
             <form method="POST" class="admin-form">
                 <div class="form-group">
-                    <label for="username">Имя пользователя:</label>
+                    <label for="username">
+                        <i class="fas fa-user"></i> Имя пользователя
+                    </label>
                     <input type="text" id="username" name="username" required minlength="3">
+                    <i class="fas fa-user"></i>
                 </div>
 
                 <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="email" name="email" placeholder="example@domain.com">
+                    <i class="fas fa-envelope"></i>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Пароль:</label>
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Пароль
+                    </label>
                     <input type="password" id="password" name="password" required minlength="6">
+                    <i class="fas fa-lock"></i>
                 </div>
 
                 <div class="form-group">
-                    <label for="role">Роль:</label>
+                    <label for="role">
+                        <i class="fas fa-user-shield"></i> Роль пользователя
+                    </label>
                     <select id="role" name="role" required>
                         <option value="user">Пользователь</option>
                         <option value="admin">Администратор</option>
                     </select>
+                    <i class="fas fa-user-shield"></i>
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Добавить пользователя</button>
-                    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">Отмена</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Добавить пользователя
+                    </button>
+                    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Отмена
+                    </a>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+        document.querySelector('.admin-form').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value.trim();
+
+            if (username.length < 3) {
+                e.preventDefault();
+                showError('Имя пользователя должно содержать минимум 3 символа');
+                return;
+            }
+
+            if (password.length < 6) {
+                e.preventDefault();
+                showError('Пароль должен содержать минимум 6 символов');
+                return;
+            }
+
+            if (email && !validateEmail(email)) {
+                e.preventDefault();
+                showError('Введите корректный email адрес');
+                return;
+            }
+        });
+
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function showError(message) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-error';
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                ${message}
+            `;
+            
+            const container = document.querySelector('.form-container');
+            container.insertBefore(alert, container.firstChild);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        document.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.transform = 'translateX(5px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.style.transform = 'translateX(0)';
+            });
+        });
+    </script>
 </body>
 </html>

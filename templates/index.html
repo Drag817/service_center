@@ -3,124 +3,616 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Главная | Сервисный центр</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Сервисный центр | Ремонт техники</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #dc2626;
+            --primary-blue: #1d4ed8;
+            --light-blue: #3b82f6;
+            --dark-blue: #1e40af;
+            --light-red: #ef4444;
+            --white: #ffffff;
+            --gray-light: #f3f4f6;
+            --gray-dark: #374151;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            line-height: 1.6;
+            color: var(--gray-dark);
+            background-color: var(--gray-light);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-red));
+            color: var(--white);
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav {
+            background: var(--white);
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav a {
+            color: var(--gray-dark);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav a i {
+            font-size: 1.2rem;
+        }
+
+        .nav a:hover {
+            background: var(--light-blue);
+            color: var(--white);
+        }
+
+        .nav a.active {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Слайдер */
+        .slider-container {
+            position: relative;
+            margin: 2rem 0;
+            border-radius: 1rem;
+            overflow: hidden;
+            height: 500px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .slider {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+        }
+
+        .slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .slide-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 2rem;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: var(--white);
+        }
+
+        .slider-buttons {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            transform: translateY(-50%);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 1rem;
+        }
+
+        .slider-btn {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slider-btn:hover {
+            background: var(--primary-blue);
+        }
+
+        /* Калькулятор */
+        .calculator {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 2rem 0;
+        }
+
+        .calculator h2 {
+            color: var(--primary-blue);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .service-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .service-option {
+            background: var(--gray-light);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            transition: var(--transition);
+        }
+
+        .service-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .service-option h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .service-option h3 i {
+            color: var(--primary-red);
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--light-blue);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.2);
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper label {
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .result {
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            color: var(--white);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Описание услуг */
+        .services-description {
+            margin: 3rem 0;
+        }
+
+        .services-description h2 {
+            color: var(--primary-blue);
+            margin-bottom: 2rem;
+            text-align: center;
+            font-size: 2rem;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .service-card {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: var(--transition);
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.1);
+        }
+
+        .service-icon {
+            font-size: 2.5rem;
+            color: var(--primary-red);
+            margin-bottom: 1rem;
+        }
+
+        .service-card h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .service-card p {
+            color: var(--gray-dark);
+            font-size: 0.95rem;
+        }
+
+        .price-tag {
+            display: inline-block;
+            background: var(--primary-blue);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+
+        /* Дополнительные стили */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: var(--transition);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-red);
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            background: var(--gray-dark);
+            color: var(--white);
+            padding: 3rem 0;
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                flex-wrap: wrap;
+            }
+            
+            .slider-container {
+                height: 300px;
+            }
+            
+            .service-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <header class="header">
-        <h1>Сервисный центр</h1>
+        <h1><i class="fas fa-tools"></i> Сервисный центр</h1>
         <p class="subtitle">Профессиональный ремонт и обслуживание техники</p>
     </header>
 
     <nav class="nav">
-        <a href="{{ url_for('index') }}" class="active">Главная</a>
-        <a href="{{ url_for('catalog') }}">Каталог услуг</a>
-        {% if 'user_id' in session %}
-            {% if session['role'] == 'admin' %}
-                <a href="{{ url_for('admin_panel') }}">Админ панель</a>
-            {% endif %}
-            <a href="{{ url_for('profile') }}">Личный кабинет</a>
-            <a href="{{ url_for('logout') }}">Выйти</a>
-        {% else %}
-            <a href="{{ url_for('login') }}">Войти</a>
-            <a href="{{ url_for('register') }}">Регистрация</a>
+    <a href="{{ url_for('index') }}" class="active"><i class="fas fa-home"></i> Главная</a>
+    <a href="{{ url_for('catalog') }}"><i class="fas fa-list"></i> Услуги</a>
+    <a href="{{ url_for('index') }}#calculator"><i class="fas fa-calculator"></i> Калькулятор</a>
+    {% if 'user_id' in session %}
+        {% if session['role'] == 'admin' %}
+            <a href="{{ url_for('admin_panel') }}"><i class="fas fa-cog"></i> Админ панель</a>
         {% endif %}
+        <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Личный кабинет</a>
+        <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Выйти</a>
+    {% else %}
+        <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Войти</a>
+        <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Регистрация</a>
+    {% endif %}
     </nav>
 
     <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <!-- Преимущества -->
-        <section class="features">
-            <h2>Наши преимущества</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🛠️</div>
-                    <h3>Профессионализм</h3>
-                    <p>Команда опытных мастеров с многолетним стажем работы</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Скорость</h3>
-                    <p>Быстрая диагностика и ремонт в кратчайшие сроки</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💰</div>
-                    <h3>Гарантия</h3>
-                    <p>Предоставляем гарантию на все виды работ</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🏆</div>
-                    <h3>Качество</h3>
-                    <p>Используем только оригинальные запчасти</p>
-                </div>
+        <!-- Слайдер -->
+<div class="slider-container">
+    <div class="slider">
+        <div class="slide">
+            <img src="{{ url_for('static', filename='images/1.JPG') }}" alt="Сервис 1">
+            <div class="slide-content">
+                <h2>Профессиональный ремонт</h2>
+                <p>Быстрое и качественное обслуживание</p>
             </div>
-        </section>
+        </div>
+        <div class="slide">
+            <img src="{{ url_for('static', filename='images/2.JPG') }}" alt="Сервис 2">
+            <div class="slide-content">
+                <h2>Современное оборудование</h2>
+                <p>Диагностика на профессиональном оборудовании</p>
+            </div>
+        </div>
+        <div class="slide">
+            <img src="{{ url_for('static', filename='images/3.JPG') }}" alt="Сервис 3">
+            <div class="slide-content">
+                <h2>Гарантия качества</h2>
+                <p>Предоставляем гарантию на все виды работ</p>
+            </div>
+        </div>
+    </div>
+    <div class="slider-buttons">
+        <button class="slider-btn prev-btn"><i class="fas fa-chevron-left"></i></button>
+        <button class="slider-btn next-btn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+</div>
 
-        <!-- Популярные услуги -->
-        <section class="popular-services">
-            <h2>Популярные услуги</h2>
-            <div class="catalog-grid">
-                {% for product in products %}
+        <!-- Калькулятор -->
+        <div class="calculator">
+            <h2><i class="fas fa-calculator"></i> Калькулятор услуг</h2>
+            <div class="service-options">
+                <div class="service-option">
+                    <h3><i class="fas fa-mobile-alt"></i> Тип устройства</h3>
+                    <select id="deviceType">
+                        <option value="">Выберите тип устройства</option>
+                        <option value="smartphone">Смартфон</option>
+                        <option value="tablet">Планшет</option>
+                        <option value="laptop">Ноутбук</option>
+                        <option value="pc">Компьютер</option>
+                        <option value="tv">Телевизор</option>
+                    </select>
+                </div>
+
+                <div class="service-option">
+                    <h3><i class="fas fa-wrench"></i> Тип ремонта</h3>
+                    <select id="repairType">
+                        <option value="">Выберите тип ремонта</option>
+                        <option value="screen">Замена экрана</option>
+                        <option value="battery">Замена батареи</option>
+                        <option value="software">Программный ремонт</option>
+                        <option value="diagnostic">Диагностика</option>
+                        <option value="motherboard">Ремонт платы</option>
+                        <option value="water">Ремонт после залития</option>
+                    </select>
+                </div>
+
+                <div class="service-option">
+    <h3><i class="fas fa-star"></i> Дополнительные услуги</h3>
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="express" value="express">
+        <label for="express">Срочный ремонт (+30%)</label>
+    </div>
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="warranty" value="warranty">
+        <label for="warranty">Расширенная гарантия (+15%)</label>
+    </div>
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="delivery" value="delivery">
+        <label for="delivery">Доставка устройства (+1000₽)</label>
+    </div>
+</div>
+            </div>
+
+            <div class="result">
+                Предварительная стоимость: <span id="totalPrice">0</span> ₽
+            </div>
+        </div>
+
+        <!-- Описание услуг -->
+        <section class="services-description">
+            <h2><i class="fas fa-clipboard-list"></i> Наши услуги</h2>
+            <div class="services-grid">
                 <div class="service-card">
-                    <img src="/{{ product.image }}" alt="{{ product.name }}" class="service-image">
-                    <div class="service-info">
-                        <h3>{{ product.name }}</h3>
-                        <p class="price">{{ product.price }} ₽</p>
-                        <p class="description">{{ product.description }}</p>
-                        {% if 'user_id' in session %}
-                            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST">
-                                <button type="submit" class="btn btn-primary">В корзину</button>
-                            </form>
-                        {% else %}
-                            <a href="{{ url_for('login') }}" class="btn btn-primary">Войти для заказа</a>
-                        {% endif %}
+                    <div class="service-icon">
+                        <i class="fas fa-mobile-alt"></i>
                     </div>
+                    <h3>Ремонт смартфонов</h3>
+                    <p>Профессиональный ремонт смартфонов любой сложности. Замена экрана, батареи, разъемов.</p>
+                    <span class="price-tag">от 1000 ₽</span>
                 </div>
-                {% endfor %}
-            </div>
-            <div class="center-button" style="text-align: center; margin-top: 2rem;">
-                <a href="{{ url_for('catalog') }}" class="btn btn-primary">Посмотреть все услуги</a>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-laptop"></i>
+                    </div>
+                    <h3>Ремонт ноутбуков</h3>
+                    <p>Диагностика и ремонт ноутбуков. Замена матрицы, клавиатуры, чистка от пыли.</p>
+                    <span class="price-tag">от 1500 ₽</span>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                    <h3>Ремонт компьютеров</h3>
+                    <p>Модернизация и ремонт ПК. Установка ПО, замена комплектующих.</p>
+                    <span class="price-tag">от 2000 ₽</span>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-tablet-alt"></i>
+                    </div>
+                    <h3>Ремонт планшетов</h3>
+                    <p>Замена экрана, батареи и других компонентов. Восстановление после повреждений.</p>
+                    <span class="price-tag">от 1200 ₽</span>
+                </div>
             </div>
         </section>
 
-        <!-- Контакты -->
-        <section class="contacts">
-            <h2>Контакты</h2>
-            <div class="contacts-grid">
-                <div class="contact-info">
-                    <h3>Адрес</h3>
-                    <p>г. Москва, ул. Примерная, д. 1</p>
-                </div>
-                <div class="contact-info">
-                    <h3>Телефон</h3>
-                    <p>8 (800) 123-45-67</p>
-                </div>
-                <div class="contact-info">
-                    <h3>Email</h3>
-                    <p>info@serviscentr.ru</p>
-                </div>
-                <div class="contact-info">
-                    <h3>Режим работы</h3>
-                    <p>Пн-Пт: 9:00 - 20:00</p>
-                    <p>Сб-Вс: 10:00 - 18:00</p>
-                </div>
-            </div>
-        </section>
     </div>
 
-    <footer class="footer" style="background-color: var(--gray-dark); color: var(--white); padding: 2rem 0; text-align: center; margin-top: 3rem;">
+    <footer>
         <div class="container">
             <p>&copy; 2025 Сервисный центр. Все права защищены.</p>
         </div>
     </footer>
+
+    <script>
+        // Слайдер
+        const slider = document.querySelector('.slider');
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.querySelector('.prev-btn');
+        const nextBtn = document.querySelector('.next-btn');
+        let currentSlide = 0;
+
+        function updateSlider() {
+            slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            updateSlider();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentSlide = (currentSlide + 1) % slides.length;
+            updateSlider();
+        });
+
+        // Автоматическая смена слайдов
+        setInterval(() => {
+            currentSlide = (currentSlide + 1) % slides.length;
+            updateSlider();
+        }, 5000);
+
+        // Калькулятор
+        const prices = {
+            smartphone: {
+                screen: 5000,
+                battery: 2000,
+                software: 1500,
+                diagnostic: 1000,
+                motherboard: 3500,
+                water: 4000
+            },
+            tablet: {
+                screen: 6000,
+                battery: 2500,
+                software: 1500,
+                diagnostic: 1000,
+                motherboard: 4000,
+                water: 4500
+            },
+            laptop: {
+                screen: 12000,
+                battery: 4000,
+                software: 2000,
+                diagnostic: 1500,
+                motherboard: 7000,
+                water: 6000
+            },
+            pc: {
+                screen: 8000,
+                battery: 0,
+                software: 2000,
+                diagnostic: 1500,
+                motherboard: 5000,
+                water: 5000
+            },
+            tv: {
+                screen: 15000,
+                battery: 0,
+                software: 3000,
+                diagnostic: 2000,
+                motherboard: 8000,
+                water: 7000
+            }
+        };
+
+        function calculatePrice() {
+            const deviceType = document.getElementById('deviceType').value;
+            const repairType = document.getElementById('repairType').value;
+            const express = document.getElementById('express').checked;
+            const warranty = document.getElementById('warranty').checked;
+            const delivery = document.getElementById('delivery').checked;
+
+            if (!deviceType || !repairType) {
+                document.getElementById('totalPrice').textContent = '0';
+                return;
+            }
+
+            let price = prices[deviceType][repairType];
+
+            if (express) price *= 1.3; // +30% за срочность
+            if (warranty) price *= 1.15; // +15% за расширенную гарантию
+            if (delivery) price += 1000; // +1000₽ за доставку
+
+            document.getElementById('totalPrice').textContent = Math.round(price).toLocaleString();
+        }
+
+        // Добавляем обработчики событий
+        document.getElementById('deviceType').addEventListener('change', calculatePrice);
+        document.getElementById('repairType').addEventListener('change', calculatePrice);
+        document.getElementById('express').addEventListener('change', calculatePrice);
+        document.getElementById('warranty').addEventListener('change', calculatePrice);
+        document.getElementById('delivery').addEventListener('change', calculatePrice);
+    </script>
 </body>
 </html>

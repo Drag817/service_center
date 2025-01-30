@@ -3,53 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Добавление новой услуги | Сервисный центр</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Добавление услуги | Сервисный центр</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #dc2626;
+            --primary-blue: #1d4ed8;
+            --light-blue: #3b82f6;
+            --dark-blue: #1e40af;
+            --light-red: #ef4444;
+            --white: #ffffff;
+            --gray-light: #f3f4f6;
+            --gray-dark: #374151;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            line-height: 1.6;
+            color: var(--gray-dark);
+            background-color: var(--gray-light);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-red));
+            color: var(--white);
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .nav {
+            background: var(--white);
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav a {
+            color: var(--gray-dark);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav a:hover {
+            background: var(--light-blue);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .form-container {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--primary-blue);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--light-blue);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+            transform: translateX(5px);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .file-input-container {
+            margin-top: 1rem;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            color: var(--white);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, var(--dark-blue), var(--primary-blue));
+        }
+
+        .preview-container {
+            background: var(--gray-light);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .preview-container h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .preview-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--dark-blue), var(--primary-blue));
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--gray-light);
+            color: var(--gray-dark);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .form-text {
+            font-size: 0.875rem;
+            color: var(--gray-dark);
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            background: var(--light-red);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .form-container {
+                padding: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <header class="header">
-        <h1>Добавление новой услуги</h1>
+        <h1><i class="fas fa-plus-circle"></i> Добавление услуги</h1>
+        <p>Заполните форму для добавления новой услуги</p>
     </header>
 
     <nav class="nav">
-        <a href="{{ url_for('admin_panel') }}">Вернуться в панель управления</a>
+        <a href="{{ url_for('admin_panel') }}">
+            <i class="fas fa-arrow-left"></i> Вернуться в панель управления
+        </a>
     </nav>
 
     <div class="container">
         <div class="form-container">
             <form method="POST" enctype="multipart/form-data" class="service-form">
                 <div class="form-group">
-                    <label for="name">Название услуги:</label>
+                    <label for="name">
+                        <i class="fas fa-tag"></i> Название услуги
+                    </label>
                     <input type="text" id="name" name="name" required 
                            placeholder="Введите название услуги">
                 </div>
 
                 <div class="form-group">
-                    <label for="price">Стоимость (руб.):</label>
+                    <label for="price">
+                        <i class="fas fa-ruble-sign"></i> Стоимость
+                    </label>
                     <input type="number" id="price" name="price" step="0.01" required 
                            placeholder="Введите стоимость">
                 </div>
 
                 <div class="form-group">
-                    <label for="description">Описание услуги:</label>
-                    <textarea id="description" name="description" rows="5" required 
+                    <label for="description">
+                        <i class="fas fa-align-left"></i> Описание услуги
+                    </label>
+                    <textarea id="description" name="description" required 
                               placeholder="Введите подробное описание услуги"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="image">Изображение:</label>
-                    <input type="file" id="image" name="image" accept="image/*" required>
-                    <small class="form-text">Поддерживаемые форматы: PNG, JPG, JPEG, GIF</small>
+                    <label for="image">
+                        <i class="fas fa-image"></i> Изображение услуги
+                    </label>
+                    <div class="file-input-container">
+                        <label for="image" class="file-input-label">
+                            <i class="fas fa-upload"></i> Выберите изображение
+                        </label>
+                        <input type="file" id="image" name="image" accept="image/*" required 
+                               style="display: none;">
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Поддерживаемые форматы: PNG, JPG, JPEG, GIF
+                    </div>
                 </div>
 
-                <div class="preview-container" style="display: none;">
-                    <h3>Предпросмотр изображения:</h3>
-                    <img id="preview" src="" alt="Предпросмотр" style="max-width: 300px;">
+                <div id="preview-container" class="preview-container" style="display: none;">
+                    <h3>
+                        <i class="fas fa-eye"></i> Предпросмотр изображения
+                    </h3>
+                    <img id="preview" src="" alt="Предпросмотр">
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Добавить услугу</button>
-                    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">Отмена</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Добавить услугу
+                    </button>
+                    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Отмена
+                    </a>
                 </div>
             </form>
         </div>
@@ -60,27 +346,74 @@
         document.getElementById('image').addEventListener('change', function(e) {
             const file = e.target.files[0];
             const preview = document.getElementById('preview');
-            const previewContainer = document.querySelector('.preview-container');
+            const previewContainer = document.getElementById('preview-container');
+            const fileLabel = document.querySelector('.file-input-label');
             
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
                     previewContainer.style.display = 'block';
+                    fileLabel.innerHTML = `<i class="fas fa-check"></i> Файл выбран: ${file.name}`;
                 }
                 reader.readAsDataURL(file);
             } else {
                 previewContainer.style.display = 'none';
+                fileLabel.innerHTML = `<i class="fas fa-upload"></i> Выберите изображение`;
             }
         });
 
         // Валидация формы
-        document.querySelector('form').addEventListener('submit', function(e) {
+        document.querySelector('.service-form').addEventListener('submit', function(e) {
             const price = document.getElementById('price').value;
+            const name = document.getElementById('name').value.trim();
+            const description = document.getElementById('description').value.trim();
+
             if (price <= 0) {
                 e.preventDefault();
-                alert('Стоимость услуги должна быть больше нуля!');
+                showError('Стоимость услуги должна быть больше нуля!');
+                return;
             }
+
+            if (name.length < 3) {
+                e.preventDefault();
+                showError('Название услуги должно содержать минимум 3 символа!');
+                return;
+            }
+
+            if (description.length < 10) {
+                e.preventDefault();
+                showError('Описание услуги должно содержать минимум 10 символов!');
+                return;
+            }
+        });
+
+        // Показ ошибки
+        function showError(message) {
+            const alert = document.createElement('div');
+            alert.className = 'alert';
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                ${message}
+            `;
+            
+            const container = document.querySelector('.form-container');
+            container.insertBefore(alert, container.firstChild);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        // Анимация полей при фокусе
+        document.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.transform = 'translateX(5px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.style.transform = 'translateX(0)';
+            });
         });
     </script>
 </body>
