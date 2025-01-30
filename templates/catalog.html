@@ -295,6 +295,14 @@
             cursor: pointer;
         }
 
+        footer {
+            background: var(--gray-dark);
+            color: var(--white);
+            padding: 3rem 0;
+            margin-top: 3rem;
+            text-align: center;
+        }
+
         .no-results {
             text-align: center;
             padding: 3rem;
@@ -489,13 +497,13 @@
 
     <!-- Модальное окно для отзыва -->
     <div id="review-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeReviewModal()">&times;</span>
-            <h2><i class="fas fa-star"></i> Оставить отзыв</h2>
-            <form id="review-form" method="POST">
-                <div class="control-group">
-                    <label><i class="fas fa-star"></i> Оценка</label>
-                    <select name="rating" id="rating" required>
+        <div class="modal-content" style="text-align: center;">
+            <!-- <span class="close" onclick="closeReviewModal()">&times;</span> -->
+            <h2 style="margin-bottom: 1.5rem;"><i class="fas fa-star"></i> Оставить отзыв</h2>
+            <form id="review-form" method="POST" style="max-width: 500px; margin: 0 auto;">
+                <div class="control-group" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-star"></i> Оценка</label>
+                    <select name="rating" id="rating" required style="width: 100%; padding: 0.5rem;">
                         <option value="5">5 звезд - Отлично</option>
                         <option value="4">4 звезды - Хорошо</option>
                         <option value="3">3 звезды - Нормально</option>
@@ -503,17 +511,24 @@
                         <option value="1">1 звезда - Ужасно</option>
                     </select>
                 </div>
-                <div class="control-group">
-                    <label><i class="fas fa-comment"></i> Комментарий</label>
+                <div class="control-group" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-comment"></i> Комментарий</label>
                     <textarea name="comment" id="comment" rows="4" required 
-                              placeholder="Поделитесь вашим мнением об услуге..."></textarea>
+                              placeholder="Поделитесь вашим мнением об услуге..."
+                              style="width: 100%; padding: 0.5rem;"></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-paper-plane"></i> Отправить отзыв
                 </button>
             </form>
         </div>
     </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Сервисный центр. Все права защищены.</p>
+        </div>
+    </footer>
 
     <script>
         // Обновление фильтров и сортировки
