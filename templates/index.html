@@ -160,11 +160,13 @@
 
         /* Калькулятор */
         .calculator {
+            scroll-margin-top: 80px; /* Уменьшаем отступ для более точного позиционирования */
             background: var(--white);
             border-radius: 1rem;
             padding: 2rem;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             margin: 2rem 0;
+            transition: transform 0.3s ease; /* Добавляем анимацию при прокрутке */
         }
 
         .calculator h2 {
@@ -357,6 +359,11 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Общие стили */
+        html {
+            scroll-behavior: smooth; /* Включаем плавную прокрутку для всей страницы */
+        }
     </style>
 </head>
 <body>
@@ -414,7 +421,7 @@
 </div>
 
         <!-- Калькулятор -->
-        <div class="calculator">
+        <div id="calculator" class="calculator">
             <h2><i class="fas fa-calculator"></i> Калькулятор услуг</h2>
             <div class="service-options">
                 <div class="service-option">

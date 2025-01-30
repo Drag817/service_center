@@ -1,8 +1,7 @@
-# Файл: service_center_project/app.py
-
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func  # Добавлен импорт
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
@@ -125,36 +124,36 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # try:
-        username = request.form.get('username')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        role = request.form.get('role', 'user')
-        
-        if password != confirm_password:
-            flash('Пароли не совпадают!', 'error')
-            return redirect(url_for('register'))
-        print("here1")
-        if User.query.filter_by(username=username).first():
-            flash('Пользователь с таким именем уже существует!', 'error')
-            return redirect(url_for('register'))
-        print("here2")
-        new_user = User(
-            username=username,
-            password=generate_password_hash(password),
-            role=role
-        )
-        
-        db.session.add(new_user)
-        db.session.commit()
-        flash('Регистрация успешно завершена!', 'success')
-        return redirect(url_for('login'))
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+            role = request.form.get('role', 'user')
             
-        # except Exception as e:
-        #     db.session.rollback()
-        #     print(f"Error during registration: {str(e)}")
-        #     flash('Произошла ошибка при регистрации.', 'error')
-        #     return redirect(url_for('register'))
+            if password != confirm_password:
+                flash('Пароли не совпадают!', 'error')
+                return redirect(url_for('register'))
+            
+            if User.query.filter_by(username=username).first():
+                flash('Пользователь с таким именем уже существует!', 'error')
+                return redirect(url_for('register'))
+            
+            new_user = User(
+                username=username,
+                password=generate_password_hash(password),
+                role=role
+            )
+            
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Регистрация успешно завершена!', 'success')
+            return redirect(url_for('login'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during registration: {str(e)}")
+            flash('Произошла ошибка при регистрации.', 'error')
+            return redirect(url_for('register'))
     
     return render_template('register.html')
 
@@ -201,28 +200,83 @@ def logout():
 @app.route('/catalog')
 def catalog():
     try:
+        # Получаем параметры сортировки и фильтрации
         sort_by = request.args.get('sort', 'popularity')
         order = request.args.get('order', 'desc')
-        
+        device_type = request.args.get('device')
+        price_range = request.args.get('price')
+        search_query = request.args.get('search')
+        rating_filter = request.args.get('rating')
+
+        # Начинаем с базового запроса
         query = Product.query
+
+        # Применяем фильтр по поиску
+        if search_query:
+            query = query.filter(Product.name.ilike(f'%{search_query}%'))
+
+        # Фильтр по ценовому диапазону
+        if price_range:
+            if price_range == '0-2000':
+                query = query.filter(Product.price <= 2000)
+            elif price_range == '2000-5000':
+                query = query.filter(Product.price > 2000, Product.price <= 5000)
+            elif price_range == '5000-10000':
+                query = query.filter(Product.price > 5000, Product.price <= 10000)
+            elif price_range == '10000+':
+                query = query.filter(Product.price > 10000)
+
+        # Применяем сортировку
         if sort_by == 'price':
             if order == 'asc':
                 query = query.order_by(Product.price.asc())
             else:
                 query = query.order_by(Product.price.desc())
-        else:
-            query = query.order_by(Product.popularity.desc())
-        
+        elif sort_by == 'popularity':
+            if order == 'asc':
+                query = query.order_by(Product.popularity.asc())
+            else:
+                query = query.order_by(Product.popularity.desc())
+        elif sort_by == 'date':
+            if order == 'asc':
+                query = query.order_by(Product.created_at.asc())
+            else:
+                query = query.order_by(Product.created_at.desc())
+
+        # Получаем все продукты после применения фильтров и сортировки
         products = query.all()
-        
-        return render_template('catalog.html', 
-                             products=products, 
-                             sort_by=sort_by, 
+
+        # Если есть фильтр по рейтингу, применяем его после получения продуктов
+        # (так как рейтинг вычисляется на основе отзывов)
+        if rating_filter:
+            filtered_products = []
+            for product in products:
+                avg_rating = db.session.query(func.avg(Review.rating))\
+                    .filter(Review.product_id == product.id)\
+                    .scalar() or 0
+                if float(rating_filter) <= avg_rating < float(rating_filter) + 1:
+                    filtered_products.append(product)
+            products = filtered_products
+
+        # Подсчитываем средний рейтинг для каждого продукта
+        for product in products:
+            product.avg_rating = db.session.query(func.avg(Review.rating))\
+                .filter(Review.product_id == product.id)\
+                .scalar() or 0
+
+        return render_template('catalog.html',
+                             products=products,
+                             sort_by=sort_by,
                              order=order,
+                             device_type=device_type,
+                             price_range=price_range,
+                             rating_filter=rating_filter,
+                             search_query=search_query,
                              username=session.get('username'),
                              role=session.get('role'))
+
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in catalog: {e}")
         flash('Ошибка при загрузке каталога.', 'error')
         return redirect(url_for('index'))
 
@@ -376,18 +430,23 @@ def add_review(product_id):
 def delete_review(review_id):
     try:
         review = Review.query.get_or_404(review_id)
-        # Проверяем, что отзыв принадлежит текущему пользователю или пользователь админ
-        if review.user_id == session['user_id'] or session.get('role') == 'admin':
-            db.session.delete(review)
-            db.session.commit()
-            flash('Отзыв успешно удален.', 'success')
-        else:
+        # Проверяем, что отзыв принадлежит текущему пользователю
+        if review.user_id != session['user_id'] and session['role'] != 'admin':
             flash('У вас нет прав для удаления этого отзыва.', 'error')
+            return redirect(url_for('profile'))
+        
+        # Уменьшаем популярность товара при удалении отзыва
+        product = Product.query.get(review.product_id)
+        if product:
+            product.popularity = max(0, product.popularity - 2)
+        
+        db.session.delete(review)
+        db.session.commit()
+        flash('Отзыв успешно удален.', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при удалении отзыва: {str(e)}', 'error')
     
-    # Возвращаемся на предыдущую страницу
     return redirect(request.referrer or url_for('profile'))
 
 # Административные маршруты
