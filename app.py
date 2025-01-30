@@ -1,12 +1,14 @@
-from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func  # Добавлен импорт
-from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 import os
+from functools import wraps
 from datetime import datetime
 from dotenv import load_dotenv
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -30,6 +32,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
 
+
 # Декораторы для проверки прав доступа
 def login_required(f):
     @wraps(f)
@@ -37,8 +40,11 @@ def login_required(f):
         if 'user_id' not in session:
             flash('Необходимо войти в систему.', 'error')
             return redirect(url_for('login'))
+        
         return f(*args, **kwargs)
+    
     return decorated_function
+
 
 def admin_required(f):
     @wraps(f)
@@ -46,20 +52,26 @@ def admin_required(f):
         if 'user_id' not in session:
             flash('Необходимо войти в систему.', 'error')
             return redirect(url_for('login'))
+        
         if session.get('role') != 'admin':
             flash('Доступ запрещен. Необходимы права администратора.', 'error')
             return redirect(url_for('index'))
+        
         return f(*args, **kwargs)
+    
     return decorated_function
+
 
 # Проверка расширения файла
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
+
 # Маршрут для отображения загруженных файлов
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 
 # Модели базы данных
 class User(db.Model):
@@ -70,6 +82,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True)
     phone = db.Column(db.String(20))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,6 +95,7 @@ class Product(db.Model):
     # Добавляем relationship для получения отзывов
     reviews = db.relationship('Review', backref='product', lazy=True, cascade='all, delete-orphan')
 
+
 class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
@@ -90,6 +104,7 @@ class Cart(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Добавляем relationship для получения информации о продукте
     product = db.relationship('Product', backref='cart_items')
+
 
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -100,6 +115,7 @@ class Review(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Добавляем relationship для получения информации о пользователе
     user = db.relationship('User', backref='reviews')
+
 
 # Основные маршруты
 @app.route('/')
@@ -113,6 +129,7 @@ def index():
                              recent_reviews=recent_reviews,
                              username=session.get('username'),
                              role=session.get('role'))
+    
     except Exception as e:
         print(f"Error: {e}")
         return render_template('index.html', 
@@ -120,6 +137,7 @@ def index():
                              recent_reviews=[],
                              username=session.get('username'),
                              role=session.get('role'))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -157,6 +175,7 @@ def register():
     
     return render_template('register.html')
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -180,6 +199,7 @@ def login():
                 # Направляем пользователя в зависимости от роли
                 if user.role == 'admin':
                     return redirect(url_for('admin_panel'))
+                
                 else:
                     return redirect(url_for('catalog'))
             else:
@@ -191,11 +211,13 @@ def login():
             
     return render_template('login.html')
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     flash('Вы успешно вышли из системы.', 'info')
     return redirect(url_for('index'))
+
 
 @app.route('/catalog')
 def catalog():
@@ -219,10 +241,13 @@ def catalog():
         if price_range:
             if price_range == '0-2000':
                 query = query.filter(Product.price <= 2000)
+
             elif price_range == '2000-5000':
                 query = query.filter(Product.price > 2000, Product.price <= 5000)
+
             elif price_range == '5000-10000':
                 query = query.filter(Product.price > 5000, Product.price <= 10000)
+
             elif price_range == '10000+':
                 query = query.filter(Product.price > 10000)
 
@@ -230,16 +255,21 @@ def catalog():
         if sort_by == 'price':
             if order == 'asc':
                 query = query.order_by(Product.price.asc())
+
             else:
                 query = query.order_by(Product.price.desc())
+
         elif sort_by == 'popularity':
             if order == 'asc':
                 query = query.order_by(Product.popularity.asc())
+
             else:
                 query = query.order_by(Product.popularity.desc())
+
         elif sort_by == 'date':
             if order == 'asc':
                 query = query.order_by(Product.created_at.asc())
+
             else:
                 query = query.order_by(Product.created_at.desc())
 
@@ -254,8 +284,10 @@ def catalog():
                 avg_rating = db.session.query(func.avg(Review.rating))\
                     .filter(Review.product_id == product.id)\
                     .scalar() or 0
+                
                 if float(rating_filter) <= avg_rating < float(rating_filter) + 1:
                     filtered_products.append(product)
+
             products = filtered_products
 
         # Подсчитываем средний рейтинг для каждого продукта
@@ -280,6 +312,7 @@ def catalog():
         flash('Ошибка при загрузке каталога.', 'error')
         return redirect(url_for('index'))
 
+
 @app.route('/profile')
 @login_required
 def profile():
@@ -298,9 +331,11 @@ def profile():
                              total_price=total_price,
                              username=session.get('username'),
                              role=session.get('role'))
+    
     except Exception as e:
         flash(f'Ошибка при загрузке профиля: {str(e)}', 'error')
         return redirect(url_for('index'))
+
 
 @app.route('/profile/edit', methods=['GET', 'POST'])
 @login_required
@@ -315,6 +350,7 @@ def edit_profile():
                 if User.query.filter_by(email=new_email).first():
                     flash('Этот email уже используется.', 'error')
                     return redirect(url_for('edit_profile'))
+                
                 user.email = new_email
             
             # Обновляем телефон
@@ -338,6 +374,7 @@ def edit_profile():
                          username=session.get('username'),
                          role=session.get('role'))
 
+
 @app.route('/cart/add/<int:product_id>', methods=['POST'])
 @login_required
 def add_to_cart(product_id):
@@ -350,6 +387,7 @@ def add_to_cart(product_id):
         
         if existing_item:
             existing_item.quantity += 1
+
         else:
             cart_item = Cart(user_id=session['user_id'], product_id=product_id)
             db.session.add(cart_item)
@@ -359,11 +397,13 @@ def add_to_cart(product_id):
         
         db.session.commit()
         flash('Услуга добавлена в корзину!', 'success')
+
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при добавлении в корзину: {str(e)}', 'error')
     
     return redirect(url_for('catalog'))
+
 
 @app.route('/cart/remove/<int:cart_id>', methods=['POST'])
 @login_required
@@ -377,11 +417,13 @@ def remove_from_cart(cart_id):
         db.session.delete(cart_item)
         db.session.commit()
         flash('Услуга удалена из корзины.', 'success')
+
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при удалении из корзины: {str(e)}', 'error')
     
     return redirect(url_for('profile'))
+
 
 @app.route('/review/add/<int:product_id>', methods=['POST'])
 @login_required
@@ -413,17 +455,20 @@ def add_review(product_id):
         
         # Увеличиваем популярность товара при добавлении отзыва
         product = Product.query.get(product_id)
+
         if product:
             product.popularity += 2
         
         db.session.add(review)
         db.session.commit()
         flash('Спасибо за ваш отзыв!', 'success')
+
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при добавлении отзыва: {str(e)}', 'error')
     
     return redirect(url_for('catalog'))
+
 
 @app.route('/review/delete/<int:review_id>', methods=['POST'])
 @login_required
@@ -443,11 +488,13 @@ def delete_review(review_id):
         db.session.delete(review)
         db.session.commit()
         flash('Отзыв успешно удален.', 'success')
+
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при удалении отзыва: {str(e)}', 'error')
     
     return redirect(request.referrer or url_for('profile'))
+
 
 # Административные маршруты
 @app.route('/admin')
@@ -463,9 +510,11 @@ def admin_panel():
                              reviews=reviews,
                              username=session.get('username'),
                              role=session.get('role'))
+    
     except Exception as e:
         flash(f'Ошибка при загрузке панели администратора: {str(e)}', 'error')
         return redirect(url_for('index'))
+
 
 @app.route('/admin/product/add', methods=['GET', 'POST'])
 @admin_required
@@ -497,8 +546,10 @@ def admin_add_product():
                 db.session.commit()
                 flash('Услуга успешно добавлена!', 'success')
                 return redirect(url_for('admin_panel'))
+            
             else:
                 flash('Пожалуйста, загрузите изображение в правильном формате.', 'error')
+
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при добавлении услуги: {str(e)}', 'error')
@@ -506,6 +557,7 @@ def admin_add_product():
     return render_template('admin_add_product.html',
                          username=session.get('username'),
                          role=session.get('role'))
+
 
 @app.route('/admin/product/edit/<int:product_id>', methods=['GET', 'POST'])
 @admin_required
@@ -534,6 +586,7 @@ def admin_edit_product(product_id):
             db.session.commit()
             flash('Услуга успешно обновлена!', 'success')
             return redirect(url_for('admin_panel'))
+        
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при обновлении услуги: {str(e)}', 'error')
@@ -542,6 +595,7 @@ def admin_edit_product(product_id):
                          product=product,
                          username=session.get('username'),
                          role=session.get('role'))
+
 
 @app.route('/admin/product/delete/<int:product_id>', methods=['POST'])
 @admin_required
@@ -558,11 +612,13 @@ def admin_delete_product(product_id):
         db.session.delete(product)
         db.session.commit()
         flash('Услуга успешно удалена.', 'success')
+
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при удалении услуги: {str(e)}', 'error')
     
     return redirect(url_for('admin_panel'))
+
 
 @app.route('/admin/user/add', methods=['GET', 'POST'])
 @admin_required
@@ -593,6 +649,7 @@ def admin_add_user():
             db.session.commit()
             flash('Пользователь успешно добавлен!', 'success')
             return redirect(url_for('admin_panel'))
+        
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при добавлении пользователя: {str(e)}', 'error')
@@ -600,6 +657,7 @@ def admin_add_user():
     return render_template('admin_add_user.html', 
                          username=session.get('username'),
                          role=session.get('role'))
+
 
 @app.route('/admin/user/edit/<int:user_id>', methods=['GET', 'POST'])
 @admin_required
@@ -630,6 +688,7 @@ def admin_edit_user(user_id):
             db.session.commit()
             flash('Пользователь успешно обновлен!', 'success')
             return redirect(url_for('admin_panel'))
+        
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при обновлении пользователя: {str(e)}', 'error')
@@ -639,6 +698,7 @@ def admin_edit_user(user_id):
                          username=session.get('username'),
                          role=session.get('role'))
                          
+
 @app.route('/admin/user/delete/<int:user_id>', methods=['POST'])
 @admin_required
 def admin_delete_user(user_id):
@@ -651,11 +711,13 @@ def admin_delete_user(user_id):
         db.session.delete(user)
         db.session.commit()
         flash('Пользователь успешно удален.', 'success')
+
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при удалении пользователя: {str(e)}', 'error')
     
     return redirect(url_for('admin_panel'))
+
 
 if __name__ == '__main__':
     with app.app_context():
