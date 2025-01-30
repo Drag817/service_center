@@ -141,57 +141,103 @@
             transform: translateY(-2px);
         }
 
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        .services-list {
+            display: flex;
+            flex-direction: column;
             gap: 1.5rem;
-            margin-top: 1.5rem;
+            margin-top: 2rem;
         }
 
-        .service-card {
+        .service-item {
+            display: flex;
+            gap: 2rem;
             background: var(--white);
             border-radius: 1rem;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: var(--transition);
-        }
-
-        .service-card:hover {
-            transform: translateY(-5px);
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .service-card img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .service-info {
+            transition: var(--transition);
+            position: relative;
             padding: 1.5rem;
         }
 
-        .service-info h3 {
-            color: var(--primary-blue);
-            margin-bottom: 0.5rem;
+        .service-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
         }
 
-        .price {
-            font-size: 1.25rem;
+        .service-image {
+            flex: 0 0 200px;
+            position: relative;
+        }
+
+        .service-image img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+
+        .service-badge {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            background: var(--primary-red);
+            color: var(--white);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
             font-weight: 600;
-            color: var(--primary-red);
-            margin: 0.5rem 0;
         }
 
-        .description {
-            color: var(--gray-dark);
+        .service-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 1rem;
         }
 
-        .card-actions {
+        .service-title {
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+            margin: 0;
+        }
+
+        .service-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-red);
+            white-space: nowrap;
+        }
+
+        .service-description {
+            color: var(--gray-dark);
+            margin-bottom: 1.5rem;
+            flex: 1;
+        }
+
+        .service-actions {
             display: flex;
             gap: 1rem;
-            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .service-meta {
+            display: flex;
+            gap: 2rem;
+            color: var(--gray-dark);
+            font-size: 0.875rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .tab-content {
@@ -332,6 +378,29 @@
             .nav {
                 flex-wrap: wrap;
             }
+
+            .service-item {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .service-image {
+                flex: 0 0 auto;
+            }
+
+            .service-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .service-actions {
+                flex-direction: column;
+            }
+
+            .service-meta {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
         }
     </style>
 </head>
@@ -383,28 +452,59 @@
                 </a>
             </div>
 
-            <div class="services-grid">
+            <div class="services-list">
                 {% for product in products %}
-                <div class="service-card">
-                    <img src="/{{ product.image }}" alt="{{ product.name }}">
-                    <div class="service-info">
-                        <h3>{{ product.name }}</h3>
-                        <p class="price">{{ product.price }} ₽</p>
-                        <p class="description">{{ product.description }}</p>
-                        <div class="card-actions">
-                            <a href="{{ url_for('admin_edit_product', product_id=product.id) }}" 
-                               class="btn btn-primary">
+                <div class="service-item">
+                    <div class="service-image">
+                        {% if product.image %}
+                        <img src="/{{ product.image }}" alt="{{ product.name }}">
+                        {% endif %}
+                        {% if product.popularity > 100 %}
+                        <div class="service-badge">Популярное</div>
+                        {% endif %}
+                    </div>
+                    <div class="service-content">
+                        <div class="service-header">
+                            <h3 class="service-title">
+                                <i class="fas fa-{{ 'mobile-alt' if 'смартфон' in product.name.lower() else 'laptop' if 'ноутбук' in product.name.lower() else 'desktop' if 'компьютер' in product.name.lower() else 'tablet-alt' if 'планшет' in product.name.lower() else 'tv' }}"></i>
+                                {{ product.name }}
+                            </h3>
+                            <div class="service-price">{{ product.price }} ₽</div>
+                        </div>
+                        <p class="service-description">{{ product.description }}</p>
+                        
+                        <div class="service-actions">
+                            <a href="{{ url_for('admin_edit_product', product_id=product.id) }}" class="btn btn-primary">
                                 <i class="fas fa-edit"></i> Редактировать
                             </a>
-                            <form action="{{ url_for('admin_delete_product', product_id=product.id) }}" 
-                                  method="POST" style="display: inline;">
-                                <button type="submit" class="btn btn-danger" 
-                                        onclick="return confirmDelete('услугу')">
+                            <form action="{{ url_for('admin_delete_product', product_id=product.id) }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-danger" onclick="return confirmDelete('услугу')">
                                     <i class="fas fa-trash"></i> Удалить
                                 </button>
                             </form>
                         </div>
+
+                        <div class="service-meta">
+                            <span class="meta-item">
+                                <i class="fas fa-star"></i>
+                                {{ '%.1f'|format(product.rating|default(0)) }}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-eye"></i>
+                                {{ product.popularity }} просмотров
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                {{ product.created_at.strftime('%d.%m.%Y') }}
+                            </span>
+                        </div>
                     </div>
+                </div>
+                {% else %}
+                <div class="no-results">
+                    <i class="fas fa-box-open"></i>
+                    <h3>Услуги не найдены</h3>
+                    <p>Добавьте первую услугу</p>
                 </div>
                 {% endfor %}
             </div>
@@ -492,7 +592,7 @@
                         <p>{{ review.comment }}</p>
                     </div>
                     <div class="review-actions">
-                        <form action="{{ url_for('admin_delete_review', review_id=review.id) }}" 
+                        <form action="{{ url_for('delete_review', review_id=review.id) }}" 
                               method="POST">
                             <button type="submit" class="btn btn-danger" 
                                     onclick="return confirmDelete('отзыв')">
@@ -603,7 +703,7 @@
         });
 
         // Анимация при наведении на карточки
-        document.querySelectorAll('.service-card, .review-card, .stat-card').forEach(card => {
+        document.querySelectorAll('.service-item, .review-card, .stat-card').forEach(card => {
             card.addEventListener('mouseenter', function() {
                 this.style.transform = 'translateY(-5px)';
             });

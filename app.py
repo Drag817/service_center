@@ -376,23 +376,18 @@ def add_review(product_id):
 def delete_review(review_id):
     try:
         review = Review.query.get_or_404(review_id)
-        # Проверяем, что отзыв принадлежит текущему пользователю
-        if review.user_id != session['user_id'] and session['role'] != 'admin':
+        # Проверяем, что отзыв принадлежит текущему пользователю или пользователь админ
+        if review.user_id == session['user_id'] or session.get('role') == 'admin':
+            db.session.delete(review)
+            db.session.commit()
+            flash('Отзыв успешно удален.', 'success')
+        else:
             flash('У вас нет прав для удаления этого отзыва.', 'error')
-            return redirect(url_for('profile'))
-        
-        # Уменьшаем популярность товара при удалении отзыва
-        product = Product.query.get(review.product_id)
-        if product:
-            product.popularity = max(0, product.popularity - 2)
-        
-        db.session.delete(review)
-        db.session.commit()
-        flash('Отзыв успешно удален.', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при удалении отзыва: {str(e)}', 'error')
     
+    # Возвращаемся на предыдущую страницу
     return redirect(request.referrer or url_for('profile'))
 
 # Административные маршруты
