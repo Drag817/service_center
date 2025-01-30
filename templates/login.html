@@ -4,292 +4,283 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход | Сервисный центр</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Стили для оформления страницы */
         :root {
-            --primary-red: #007bff;
-            --primary-blue: #007bff;
+            --primary-red: #dc2626;
+            --primary-blue: #1d4ed8;
+            --light-blue: #3b82f6;
+            --dark-blue: #1e40af;
+            --light-red: #ef4444;
             --white: #ffffff;
-            --gray-light: #f8f9fa;
-            --gray-dark: #343a40;
+            --gray-light: #f3f4f6;
+            --gray-dark: #374151;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
+            line-height: 1.6;
+            color: var(--gray-dark);
             background-color: var(--gray-light);
         }
 
         .header {
-            background-color: var(--primary-red);
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-red));
             color: var(--white);
-            padding: 1rem;
+            padding: 2rem 0;
             text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
         }
 
         .nav {
-            background-color: var(--primary-blue);
+            background: var(--white);
             padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
             justify-content: center;
-            gap: 2rem;
+            gap: 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         .nav a {
-            color: var(--white);
+            color: var(--gray-dark);
             text-decoration: none;
             padding: 0.5rem 1rem;
-            border-radius: 4px;
-            transition: background-color 0.3s;
+            border-radius: 0.5rem;
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav a i {
+            font-size: 1.2rem;
         }
 
         .nav a:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background: var(--light-blue);
+            color: var(--white);
+        }
+
+        .nav a.active {
+            background: var(--primary-blue);
+            color: var(--white);
         }
 
         .container {
-            max-width: 400px;
+            max-width: 500px;
             margin: 2rem auto;
             padding: 2rem;
-            background-color: var(--white);
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-card {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: var(--transition);
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h2 {
+            color: var(--primary-blue);
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
             color: var(--gray-dark);
-            font-weight: bold;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .form-group input {
             width: 100%;
             padding: 0.8rem;
-            border: 2px solid #ddd;
-            border-radius: 4px;
+            border: 2px solid var(--light-blue);
+            border-radius: 0.5rem;
             font-size: 1rem;
+            transition: var(--transition);
         }
 
         .form-group input:focus {
             border-color: var(--primary-blue);
             outline: none;
+            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
         }
 
         .btn {
             display: inline-block;
-            padding: 0.8rem 1.5rem;
+            width: 100%;
+            padding: 1rem;
             border: none;
-            border-radius: 4px;
-            background-color: var(--primary-blue);
+            border-radius: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
             color: var(--white);
             font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
-            width: 100%;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .btn:hover {
-            background-color: #0056b3;
-        }
-
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 4px;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: linear-gradient(135deg, var(--dark-blue), var(--primary-blue));
+            transform: translateY(-2px);
         }
 
         .auth-links {
             margin-top: 2rem;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .auth-links a {
             color: var(--primary-blue);
             text-decoration: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .auth-links a:hover {
+            color: var(--dark-blue);
             text-decoration: underline;
         }
 
         .roles-info {
             margin-top: 2rem;
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 4px;
+            background: linear-gradient(to right, var(--gray-light), var(--white));
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .roles-info h3 {
-            color: var(--primary-red);
-            margin-top: 0;
-        }
-    </style>
-</head>
-<body>
-    <header class="header">
-        <h1>Сервисный центр</h1>
-    </header>
-
-    <nav class="nav">
-        <a href="{{ url_for('index') }}">Главная</a>
-        <a href="{{ url_for('catalog') }}">Каталог услуг</a>
-        <a href="{{ url_for('login') }}" class="active">Войти</a>
-        <a href="{{ url_for('register') }}">Регистрация</a>
-    </nav>
-
-    <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <h2>Вход в систему</h2>
-
-        <form method="POST" class="login-form">
-            <div class="form-group">
-                <label for="username">Имя пользователя:</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Пароль:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-
-            <button type="submit" class="btn">Войти</button>
-        </form>
-
-        <div class="auth-links">
-            <p>Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
-            <p><a href="{{ url_for('index') }}">Вернуться на главную</a></p>
-        </div>
-
-        <div class="roles-info">
-            <h3>Доступные роли в системе:</h3>
-            <div class="role-description">
-                <h4>Пользователь:</h4>
-                <ul>
-                    <li>Просмотр каталога услуг</li>
-                    <li>Добавление услуг в корзину</li>
-                    <li>Оставление отзывов</li>
-                    <li>Доступ к личному кабинету</li>
-                </ul>
-
-                <h4>Администратор:</h4>
-                <ul>
-                    <li>Управление каталогом услуг</li>
-                    <li>Управление пользователями</li>
-                    <li>Модерация отзывов</li>
-                    <li>Доступ к статистике</li>
-                </ul>
-            </div>
-
-            <div class="info-block">
-                <p><strong>Внимание!</strong> После входа вы будете перенаправлены:</p>
-                <ul>
-                    <li>Пользователи - в личный кабинет</li>
-                    <li>Администраторы - в панель управления</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Валидация формы
-        document.querySelector('.login-form').addEventListener('submit', function(e) {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            
-            if (username.length < 3) {
-                e.preventDefault();
-                alert('Имя пользователя должно содержать минимум 3 символа!');
-                return;
-            }
-            
-            if (password.length < 6) {
-                e.preventDefault();
-                alert('Пароль должен содержать минимум 6 символов!');
-                return;
-            }
-        });
-
-        // Добавляем подсказки при наведении на поля
-        const usernameInput = document.getElementById('username');
-        usernameInput.title = 'Введите имя пользователя (минимум 3 символа)';
-        
-        const passwordInput = document.getElementById('password');
-        passwordInput.title = 'Введите пароль (минимум 6 символов)';
-
-        // Подсветка активного поля
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.style.borderColor = '#007bff';
-            });
-            
-            input.addEventListener('blur', function() {
-                this.style.borderColor = '#ddd';
-            });
-        });
-    </script>
-
-    <!-- Дополнительные стили -->
-    <style>
-        .role-description {
-            margin-top: 1rem;
-        }
-
-        .role-description h4 {
             color: var(--primary-blue);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .role-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .role-card h4 {
+            color: var(--primary-red);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .role-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .role-card li {
             margin-bottom: 0.5rem;
-        }
-
-        .role-description ul {
-            margin: 0 0 1rem 0;
             padding-left: 1.5rem;
+            position: relative;
         }
 
-        .role-description li {
-            margin-bottom: 0.3rem;
+        .role-card li:before {
+            content: "\f00c";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: var(--light-blue);
         }
 
         .info-block {
-            margin-top: 1rem;
+            margin-top: 1.5rem;
             padding: 1rem;
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-            border-radius: 4px;
+            background: linear-gradient(to right, var(--light-blue), var(--primary-blue));
+            color: var(--white);
+            border-radius: 0.5rem;
         }
 
         .info-block p {
-            margin: 0 0 0.5rem 0;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .info-block ul {
-            margin: 0;
-            padding-left: 1.5rem;
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
         }
 
         @media (max-width: 576px) {
@@ -303,7 +294,138 @@
                 align-items: center;
                 gap: 0.5rem;
             }
+
+            .roles-info {
+                padding: 1rem;
+            }
         }
     </style>
+</head>
+<body>
+    <header class="header">
+        <h1><i class="fas fa-tools"></i> Сервисный центр</h1>
+        <p>Профессиональный ремонт и обслуживание техники</p>
+    </header>
+
+    <nav class="nav">
+        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Главная</a>
+        <a href="{{ url_for('catalog') }}"><i class="fas fa-list"></i> Каталог</a>
+        <a href="{{ url_for('login') }}" class="active"><i class="fas fa-sign-in-alt"></i> Войти</a>
+        <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Регистрация</a>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="login-card">
+            <div class="login-header">
+                <h2><i class="fas fa-user-lock"></i> Вход в систему</h2>
+                <p>Войдите в свой аккаунт для доступа к услугам</p>
+            </div>
+
+            <form method="POST" class="login-form">
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i> Имя пользователя
+                    </label>
+                    <input type="text" id="username" name="username" required 
+                           placeholder="Введите имя пользователя">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Пароль
+                    </label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Введите пароль">
+                </div>
+
+                <button type="submit" class="btn">
+                    <i class="fas fa-sign-in-alt"></i> Войти в систему
+                </button>
+            </form>
+
+            <div class="auth-links">
+                <a href="{{ url_for('register') }}">
+                    <i class="fas fa-user-plus"></i> Нет аккаунта? Зарегистрируйтесь
+                </a>
+                <a href="{{ url_for('index') }}">
+                    <i class="fas fa-home"></i> Вернуться на главную
+                </a>
+            </div>
+        </div>
+
+        <div class="roles-info">
+            <h3><i class="fas fa-users"></i> Роли пользователей</h3>
+            
+            <div class="role-card">
+                <h4><i class="fas fa-user"></i> Пользователь</h4>
+                <ul>
+                    <li>Просмотр каталога услуг</li>
+                    <li>Добавление услуг в корзину</li>
+                    <li>Оставление отзывов</li>
+                    <li>Доступ к личному кабинету</li>
+                </ul>
+            </div>
+
+            <div class="role-card">
+                <h4><i class="fas fa-user-shield"></i> Администратор</h4>
+                <ul>
+                    <li>Управление каталогом услуг</li>
+                    <li>Управление пользователями</li>
+                    <li>Модерация отзывов</li>
+                    <li>Доступ к статистике</li>
+                </ul>
+            </div>
+
+            <div class="info-block">
+                <p><i class="fas fa-info-circle"></i> <strong>После входа вы будете перенаправлены:</strong></p>
+                <ul>
+                    <li>Пользователи → Личный кабинет</li>
+                    <li>Администраторы → Панель управления</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Валидация формы
+        document.querySelector('.login-form').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (username.length < 3) {
+                e.preventDefault();
+                alert('Имя пользователя должно содержать минимум 3 символа');
+                return;
+            }
+            
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('Пароль должен содержать минимум 6 символов');
+                return;
+            }
+        });
+
+        // Анимация полей при фокусе
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.transform = 'translateX(5px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.style.transform = 'translateX(0)';
+            });
+        });
+    </script>
 </body>
 </html>

@@ -4,17 +4,275 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактирование пользователя | Сервисный центр</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #dc2626;
+            --primary-blue: #1d4ed8;
+            --light-blue: #3b82f6;
+            --dark-blue: #1e40af;
+            --light-red: #ef4444;
+            --white: #ffffff;
+            --gray-light: #f3f4f6;
+            --gray-dark: #374151;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            line-height: 1.6;
+            color: var(--gray-dark);
+            background-color: var(--gray-light);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-red));
+            color: var(--white);
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .nav {
+            background: var(--white);
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav a {
+            color: var(--gray-dark);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav a:hover {
+            background: var(--light-blue);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .form-container {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-header h2 {
+            color: var(--primary-blue);
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--primary-blue);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            padding-left: 2.5rem;
+            border: 2px solid var(--light-blue);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-group i {
+            position: absolute;
+            left: 1rem;
+            top: 2.7rem;
+            color: var(--primary-blue);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+            transform: translateX(5px);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--dark-blue), var(--primary-blue));
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--gray-light);
+            color: var(--gray-dark);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .role-select {
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        .role-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .role-option:hover {
+            background: var(--gray-light);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .form-container {
+                padding: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <header class="header">
-        <h1>Редактирование пользователя</h1>
+        <h1><i class="fas fa-user-edit"></i> Редактирование пользователя</h1>
+        <p>Измените данные пользователя</p>
     </header>
 
     <nav class="nav">
-        <a href="{{ url_for('admin_panel') }}">Назад к панели управления</a>
-        <a href="{{ url_for('index') }}">На главную</a>
-        <a href="{{ url_for('logout') }}">Выйти</a>
+        <a href="{{ url_for('admin_panel') }}">
+            <i class="fas fa-arrow-left"></i> Назад к панели управления
+        </a>
+        <a href="{{ url_for('index') }}">
+            <i class="fas fa-home"></i> На главную
+        </a>
+        <a href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i> Выйти
+        </a>
     </nav>
 
     <div class="container">
@@ -22,6 +280,7 @@
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }}">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -29,36 +288,123 @@
         {% endwith %}
 
         <div class="form-container">
+            <div class="form-header">
+                <h2><i class="fas fa-user-cog"></i> Данные пользователя</h2>
+            </div>
+
             <form method="POST" class="admin-form">
                 <div class="form-group">
-                    <label for="username">Имя пользователя:</label>
-                    <input type="text" id="username" name="username" value="{{ user.username }}" required minlength="3">
+                    <label for="username">
+                        <i class="fas fa-user"></i> Имя пользователя
+                    </label>
+                    <input type="text" id="username" name="username" 
+                           value="{{ user.username }}" required minlength="3">
+                    <i class="fas fa-user"></i>
                 </div>
 
                 <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" value="{{ user.email or '' }}">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="email" name="email" 
+                           value="{{ user.email or '' }}" placeholder="example@domain.com">
+                    <i class="fas fa-envelope"></i>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Новый пароль (оставьте пустым, чтобы не менять):</label>
-                    <input type="password" id="password" name="password">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Новый пароль
+                    </label>
+                    <input type="password" id="password" name="password" 
+                           placeholder="Оставьте пустым, чтобы не менять">
+                    <i class="fas fa-lock"></i>
                 </div>
 
                 <div class="form-group">
-                    <label for="role">Роль:</label>
+                    <label for="role">
+                        <i class="fas fa-user-shield"></i> Роль пользователя
+                    </label>
                     <select id="role" name="role" required>
-                        <option value="user" {% if user.role == 'user' %}selected{% endif %}>Пользователь</option>
-                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Администратор</option>
+                        <option value="user" {% if user.role == 'user' %}selected{% endif %}>
+                            Пользователь
+                        </option>
+                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>
+                            Администратор
+                        </option>
                     </select>
+                    <i class="fas fa-user-shield"></i>
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-                    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">Отмена</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Сохранить изменения
+                    </button>
+                    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Отмена
+                    </a>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+        // Валидация формы
+        document.querySelector('.admin-form').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value.trim();
+
+            if (username.length < 3) {
+                e.preventDefault();
+                showError('Имя пользователя должно содержать минимум 3 символа');
+                return;
+            }
+
+            if (password && password.length < 6) {
+                e.preventDefault();
+                showError('Пароль должен содержать минимум 6 символов');
+                return;
+            }
+
+            if (email && !validateEmail(email)) {
+                e.preventDefault();
+                showError('Введите корректный email адрес');
+                return;
+            }
+        });
+
+        // Проверка email
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        // Показ ошибки
+        function showError(message) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-error';
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                ${message}
+            `;
+            
+            const container = document.querySelector('.form-container');
+            container.insertBefore(alert, container.firstChild);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        // Анимация полей при фокусе
+        document.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.transform = 'translateX(5px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.style.transform = 'translateX(0)';
+            });
+        });
+    </script>
 </body>
 </html>

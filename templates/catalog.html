@@ -4,33 +4,211 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Каталог услуг | Сервисный центр</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
+        :root {
+            --primary-red: #dc2626;
+            --primary-blue: #1d4ed8;
+            --light-blue: #3b82f6;
+            --dark-blue: #1e40af;
+            --light-red: #ef4444;
+            --white: #ffffff;
+            --gray-light: #f3f4f6;
+            --gray-dark: #374151;
+            --transition: all 0.3s ease;
         }
 
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 500px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            line-height: 1.6;
+            color: var(--gray-dark);
+            background-color: var(--gray-light);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-red));
+            color: var(--white);
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .nav {
+            background: var(--white);
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav a {
+            color: var(--gray-dark);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav a i {
+            font-size: 1.2rem;
+        }
+
+        .nav a:hover {
+            background: var(--light-blue);
+            color: var(--white);
+        }
+
+        .nav a.active {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Расширенные контролы сортировки и фильтрации */
+        .controls-panel {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-group select,
+        .control-group input {
+            padding: 0.75rem;
+            border: 2px solid var(--light-blue);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.2);
+        }
+
+        /* Сетка услуг */
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .service-card {
+            background: var(--white);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
         }
 
         .service-image {
             width: 100%;
-            height: 250px;
+            height: 200px;
             object-fit: cover;
-            border-radius: 8px 8px 0 0;
+        }
+
+        .service-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--primary-red);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .service-info {
+            padding: 1.5rem;
+        }
+
+        .service-title {
+            font-size: 1.25rem;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .service-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-red);
+            margin: 1rem 0;
+        }
+
+        .service-description {
+            color: var(--gray-dark);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .service-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-light);
+            font-size: 0.875rem;
+            color: var(--gray-dark);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .service-actions {
@@ -39,111 +217,255 @@
             margin-top: 1rem;
         }
 
-        .review-section {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #eee;
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
         }
 
-        .reviews-list {
-            margin-top: 1rem;
+        .btn-primary {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--dark-blue);
+        }
+
+        .btn-secondary {
+            background: var(--gray-light);
+            color: var(--gray-dark);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Отзывы */
+        .reviews-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--gray-light);
         }
 
         .review {
-            background-color: #f8f9fa;
+            background: var(--gray-light);
             padding: 1rem;
-            border-radius: 4px;
+            border-radius: 0.5rem;
             margin-bottom: 1rem;
         }
 
-        .sort-controls {
-            margin: 2rem 0;
-            padding: 1rem;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
         }
 
-        .sort-controls select {
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-left: 1rem;
+        .rating {
+            color: #fbbf24;
+        }
+
+        .applied-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .filter-tag {
+            background: var(--light-blue);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-tag i {
+            cursor: pointer;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            background: var(--white);
+            border-radius: 1rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .service-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>Каталог услуг сервисного центра</h1>
+        <h1><i class="fas fa-tools"></i> Каталог услуг сервисного центра</h1>
     </header>
 
     <nav class="nav">
-        <a href="{{ url_for('index') }}">Главная</a>
-        <a href="{{ url_for('catalog') }}" class="active">Каталог</a>
+        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Главная</a>
+        <a href="{{ url_for('catalog') }}" class="active"><i class="fas fa-list"></i> Каталог</a>
         {% if 'user_id' in session %}
             {% if session['role'] == 'admin' %}
-                <a href="{{ url_for('admin_panel') }}">Админ панель</a>
+                <a href="{{ url_for('admin_panel') }}"><i class="fas fa-cog"></i> Админ панель</a>
             {% endif %}
-            <a href="{{ url_for('profile') }}">Личный кабинет</a>
-            <a href="{{ url_for('logout') }}">Выйти</a>
+            <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Личный кабинет</a>
+            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Выйти</a>
         {% else %}
-            <a href="{{ url_for('login') }}">Войти</a>
-            <a href="{{ url_for('register') }}">Регистрация</a>
+            <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Войти</a>
+            <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Регистрация</a>
         {% endif %}
     </nav>
 
     <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <!-- Панель управления -->
+        <div class="controls-panel">
+            <h2><i class="fas fa-filter"></i> Фильтры и сортировка</h2>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label><i class="fas fa-sort"></i> Сортировать по</label>
+                    <select id="sort-select" onchange="updateFilters()">
+                        <option value="popularity_desc">Самые популярные</option>
+                        <option value="popularity_asc">Менее популярные</option>
+                        <option value="price_asc">Цена: по возрастанию</option>
+                        <option value="price_desc">Цена: по убыванию</option>
+                        <option value="rating_desc">Рейтинг: высокий</option>
+                        <option value="rating_asc">Рейтинг: низкий</option>
+                        <option value="date_desc">Сначала новые</option>
+                        <option value="date_asc">Сначала старые</option>
+                    </select>
+                </div>
 
-        <!-- Панель сортировки -->
-        <div class="sort-controls">
-            <span>Сортировать по:</span>
-            <select id="sort-select" onchange="updateSort()">
-                <option value="popularity" {% if sort_by == 'popularity' %}selected{% endif %}>Популярности</option>
-                <option value="price_asc" {% if sort_by == 'price' and order == 'asc' %}selected{% endif %}>Цене (по возрастанию)</option>
-                <option value="price_desc" {% if sort_by == 'price' and order == 'desc' %}selected{% endif %}>Цене (по убыванию)</option>
-            </select>
+                <div class="control-group">
+                    <label><i class="fas fa-mobile-alt"></i> Тип устройства</label>
+                    <select id="device-type" onchange="updateFilters()">
+                        <option value="">Все устройства</option>
+                        <option value="smartphone">Смартфоны</option>
+                        <option value="tablet">Планшеты</option>
+                        <option value="laptop">Ноутбуки</option>
+                        <option value="pc">Компьютеры</option>
+                        <option value="tv">Телевизоры</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label><i class="fas fa-tools"></i> Тип услуги</label>
+                    <select id="service-type" onchange="updateFilters()">
+                        <option value="">Все услуги</option>
+                        <option value="repair">Ремонт</option>
+                        <option value="diagnostic">Диагностика</option>
+                        <option value="software">Настройка ПО</option>
+                        <option value="cleaning">Чистка</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label><i class="fas fa-dollar-sign"></i> Ценовой диапазон</label>
+                    <select id="price-range" onchange="updateFilters()">
+                        <option value="">Любая цена</option>
+                        <option value="0-2000">До 2000 ₽</option>
+                        <option value="2000-5000">2000 - 5000 ₽</option>
+                        <option value="5000-10000">5000 - 10000 ₽</option>
+                        <option value="10000+">От 10000 ₽</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Активные фильтры -->
+            <div class="applied-filters">
+                <div class="filter-tag">
+                    <span>Смартфоны</span>
+                    <i class="fas fa-times" onclick="removeFilter('device-type')"></i>
+                </div>
+                <div class="filter-tag">
+                    <span>До 2000 ₽</span>
+                    <i class="fas fa-times" onclick="removeFilter('price-range')"></i>
+                </div>
+            </div>
         </div>
 
         <!-- Сетка услуг -->
         <div class="catalog-grid">
             {% for product in products %}
             <div class="service-card">
+                {% if product.popularity > 100 %}
+                    <div class="service-badge">Популярное</div>
+                {% endif %}
                 <img src="/{{ product.image }}" alt="{{ product.name }}" class="service-image">
                 <div class="service-info">
-                    <h3>{{ product.name }}</h3>
-                    <p class="price">{{ product.price }} ₽</p>
-                    <p class="description">{{ product.description }}</p>
+                    <h3 class="service-title">
+                        <i class="fas fa-{{ 'mobile-alt' if 'смартфон' in product.name.lower() else 'laptop' if 'ноутбук' in product.name.lower() else 'desktop' if 'компьютер' in product.name.lower() else 'tablet-alt' if 'планшет' in product.name.lower() else 'tv' }}"></i>
+                        {{ product.name }}
+                    </h3>
+                    <p class="service-price">{{ product.price }} ₽</p>
+                    <p class="service-description">{{ product.description }}</p>
+                    
+                    <div class="service-meta">
+                        <span class="meta-item">
+                            <i class="fas fa-star"></i>
+                            {{ '%.1f'|format(product.rating|default(0)) }}
+                        </span>
+                        <span class="meta-item">
+                            <i class="fas fa-eye"></i>
+                            {{ product.popularity }} просмотров
+                        </span>
+                        <span class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            {{ product.created_at.strftime('%d.%m.%Y') }}
+                        </span>
+                    </div>
                     
                     {% if 'user_id' in session %}
                     <div class="service-actions">
                         <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST" class="cart-form">
-                            <button type="submit" class="btn btn-primary">Добавить в корзину</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-shopping-cart"></i> В корзину
+                            </button>
                         </form>
                         <button onclick="showReviewForm('{{ product.id }}')" class="btn btn-secondary">
-                            Оставить отзыв
+                            <i class="fas fa-comment"></i> Оставить отзыв
                         </button>
                     </div>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="btn btn-primary">Войти для заказа</a>
+                        <a href="{{ url_for('login') }}" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Войти для заказа
+                        </a>
                     {% endif %}
 
-                    <div class="review-section">
-                        <h4>Отзывы о услуге:</h4>
+                    <div class="reviews-section">
+                        <h4><i class="fas fa-comments"></i> Отзывы о услуге</h4>
                         <div class="reviews-list">
                             {% for review in product.reviews %}
                             <div class="review">
                                 <div class="review-header">
-                                    <span class="username">{{ review.username }}</span>
-                                    <span class="date">{{ review.created_at.strftime('%d.%m.%Y') }}</span>
+                                    <span class="username">
+                                        <i class="fas fa-user"></i> {{ review.user.username }}
+                                    </span>
+                                    <span class="date">
+                                        <i class="fas fa-calendar"></i> {{ review.created_at.strftime('%d.%m.%Y') }}
+                                    </span>
                                 </div>
                                 <div class="rating">
                                     {% for i in range(review.rating) %}⭐{% endfor %}
@@ -155,6 +477,12 @@
                     </div>
                 </div>
             </div>
+            {% else %}
+            <div class="no-results">
+                <i class="fas fa-search" style="font-size: 3rem; color: var(--gray-dark); margin-bottom: 1rem;"></i>
+                <h3>Услуги не найдены</h3>
+                <p>Попробуйте изменить параметры фильтрации</p>
+            </div>
             {% endfor %}
         </div>
     </div>
@@ -163,34 +491,55 @@
     <div id="review-modal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeReviewModal()">&times;</span>
-            <h2>Оставить отзыв</h2>
+            <h2><i class="fas fa-star"></i> Оставить отзыв</h2>
             <form id="review-form" method="POST">
-                <div class="form-group">
-                    <label for="rating">Оценка:</label>
+                <div class="control-group">
+                    <label><i class="fas fa-star"></i> Оценка</label>
                     <select name="rating" id="rating" required>
-                        <option value="5">5 звезд</option>
-                        <option value="4">4 звезды</option>
-                        <option value="3">3 звезды</option>
-                        <option value="2">2 звезды</option>
-                        <option value="1">1 звезда</option>
+                        <option value="5">5 звезд - Отлично</option>
+                        <option value="4">4 звезды - Хорошо</option>
+                        <option value="3">3 звезды - Нормально</option>
+                        <option value="2">2 звезды - Плохо</option>
+                        <option value="1">1 звезда - Ужасно</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="comment">Комментарий:</label>
-                    <textarea name="comment" id="comment" rows="4" required></textarea>
+                <div class="control-group">
+                    <label><i class="fas fa-comment"></i> Комментарий</label>
+                    <textarea name="comment" id="comment" rows="4" required 
+                              placeholder="Поделитесь вашим мнением об услуге..."></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Отправить отзыв
+                </button>
             </form>
         </div>
     </div>
 
     <script>
-        function updateSort() {
-            const select = document.getElementById('sort-select');
-            const [sort, order] = select.value.split('_');
-            window.location.href = `{{ url_for('catalog') }}?sort=${sort}&order=${order || 'desc'}`;
+        // Обновление фильтров и сортировки
+        function updateFilters() {
+            const sort = document.getElementById('sort-select').value;
+            const deviceType = document.getElementById('device-type').value;
+            const serviceType = document.getElementById('service-type').value;
+            const priceRange = document.getElementById('price-range').value;
+
+            const params = new URLSearchParams();
+            if (sort) params.append('sort', sort.split('_')[0]);
+            if (sort) params.append('order', sort.split('_')[1]);
+            if (deviceType) params.append('device', deviceType);
+            if (serviceType) params.append('service', serviceType);
+            if (priceRange) params.append('price', priceRange);
+
+            window.location.href = `{{ url_for('catalog') }}?${params.toString()}`;
         }
 
+        // Удаление фильтра
+        function removeFilter(filterId) {
+            document.getElementById(filterId).value = '';
+            updateFilters();
+        }
+
+        // Управление модальным окном отзыва
         function showReviewForm(productId) {
             const modal = document.getElementById('review-modal');
             const form = document.getElementById('review-form');
