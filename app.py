@@ -7,11 +7,20 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения
+load_dotenv()
 
 # Создание приложения Flask
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Замените на свой секретный ключ
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{app.secret_key}@mysql_db:3306/service_center'
+app.secret_key = os.getenv('SECRET_KEY')
+
+# Конфигурация базы данных
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
+    f"@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
@@ -116,36 +125,36 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        try:
-            username = request.form.get('username')
-            password = request.form.get('password')
-            confirm_password = request.form.get('confirm_password')
-            role = request.form.get('role', 'user')
-            
-            if password != confirm_password:
-                flash('Пароли не совпадают!', 'error')
-                return redirect(url_for('register'))
-            
-            if User.query.filter_by(username=username).first():
-                flash('Пользователь с таким именем уже существует!', 'error')
-                return redirect(url_for('register'))
-            
-            new_user = User(
-                username=username,
-                password=generate_password_hash(password),
-                role=role
-            )
-            
-            db.session.add(new_user)
-            db.session.commit()
-            flash('Регистрация успешно завершена!', 'success')
-            return redirect(url_for('login'))
-            
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error during registration: {str(e)}")
-            flash('Произошла ошибка при регистрации.', 'error')
+        # try:
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        role = request.form.get('role', 'user')
+        
+        if password != confirm_password:
+            flash('Пароли не совпадают!', 'error')
             return redirect(url_for('register'))
+        print("here1")
+        if User.query.filter_by(username=username).first():
+            flash('Пользователь с таким именем уже существует!', 'error')
+            return redirect(url_for('register'))
+        print("here2")
+        new_user = User(
+            username=username,
+            password=generate_password_hash(password),
+            role=role
+        )
+        
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Регистрация успешно завершена!', 'success')
+        return redirect(url_for('login'))
+            
+        # except Exception as e:
+        #     db.session.rollback()
+        #     print(f"Error during registration: {str(e)}")
+        #     flash('Произошла ошибка при регистрации.', 'error')
+        #     return redirect(url_for('register'))
     
     return render_template('register.html')
 
@@ -595,9 +604,9 @@ def admin_delete_user(user_id):
     return redirect(url_for('admin_panel'))
 
 if __name__ == '__main__':
-    # with app.app_context():
-        # db.create_all()
-        # if not os.path.exists(app.config['UPLOAD_FOLDER']):
-            # os.makedirs(app.`config['UPLOAD_FOLDER'])
+    with app.app_context():
+        db.create_all()
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
     
     app.run(debug=True, host='0.0.0.0', port=3000)
